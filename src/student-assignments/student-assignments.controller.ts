@@ -1,14 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { StudentAssignmentsService } from './student-assignments.service';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
 
 @Controller('student-assignments')
 export class StudentAssignmentsController {
-  constructor(private readonly studentAssignmentsService: StudentAssignmentsService) {}
+  constructor(
+    private readonly studentAssignmentsService: StudentAssignmentsService,
+  ) {}
 
   @Post()
   create(@Body() createStudentAssignmentDto: CreateStudentAssignmentDto) {
+    console.log(createStudentAssignmentDto);
     return this.studentAssignmentsService.create(createStudentAssignmentDto);
   }
 
@@ -23,8 +34,14 @@ export class StudentAssignmentsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStudentAssignmentDto: UpdateStudentAssignmentDto) {
-    return this.studentAssignmentsService.update(+id, updateStudentAssignmentDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateStudentAssignmentDto: UpdateStudentAssignmentDto,
+  ) {
+    return this.studentAssignmentsService.update(
+      +id,
+      updateStudentAssignmentDto,
+    );
   }
 
   @Delete(':id')

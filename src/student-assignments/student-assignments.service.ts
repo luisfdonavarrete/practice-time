@@ -11,8 +11,18 @@ export class StudentAssignmentsService {
     @InjectRepository(StudentAssignment)
     private StudentAssignmentRepository: Repository<StudentAssignment>,
   ) {}
-  create(createStudentAssignmentDto: CreateStudentAssignmentDto) {
-    return 'This action adds a new studentAssignment';
+  async create(
+    createStudentAssignmentDto: CreateStudentAssignmentDto,
+  ): Promise<StudentAssignment> {
+    const entity = new StudentAssignment();
+
+    entity.title = createStudentAssignmentDto.title;
+    entity.description = createStudentAssignmentDto.description;
+    entity.description = createStudentAssignmentDto.description;
+    entity.start_date = createStudentAssignmentDto.start_date.toDateString();
+    entity.end_date = createStudentAssignmentDto.end_date.toDateString();
+
+    return await this.StudentAssignmentRepository.save(entity);
   }
 
   findAll() {
