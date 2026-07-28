@@ -1,4 +1,4 @@
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateStudentAssignmentDto {
@@ -6,6 +6,7 @@ export class CreateStudentAssignmentDto {
   @IsString()
   title: string;
 
+  @IsOptional()
   @IsString()
   description?: string;
 

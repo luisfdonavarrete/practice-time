@@ -1,9 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-@Entity()
+@Entity('student_assignments')
 export class StudentAssignment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   title: string;
@@ -11,9 +17,15 @@ export class StudentAssignment {
   @Column({ nullable: true })
   description?: string;
 
-  @Column()
-  start_date: string;
+  @Column({ type: 'timestamptz' })
+  start_date: Date;
 
-  @Column()
-  end_date: string;
+  @Column({ type: 'timestamptz' })
+  end_date: Date;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date;
 }

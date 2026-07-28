@@ -1,43 +1,53 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { StudentAssignment } from './entities/student-assignment.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class StudentAssignmentsService {
   constructor(
     @InjectRepository(StudentAssignment)
-    private StudentAssignmentRepository: Repository<StudentAssignment>,
+    private readonly studentAssignmentRepository: Repository<StudentAssignment>,
   ) {}
+
   async create(
     createStudentAssignmentDto: CreateStudentAssignmentDto,
   ): Promise<StudentAssignment> {
-    const entity = new StudentAssignment();
-
-    entity.title = createStudentAssignmentDto.title;
-    entity.description = createStudentAssignmentDto.description;
-    entity.description = createStudentAssignmentDto.description;
-    entity.start_date = createStudentAssignmentDto.start_date.toDateString();
-    entity.end_date = createStudentAssignmentDto.end_date.toDateString();
-
-    return await this.StudentAssignmentRepository.save(entity);
+    const assignment = this.studentAssignmentRepository.create(
+      createStudentAssignmentDto,
+    );
+    return await this.studentAssignmentRepository.save(assignment);
   }
 
-  findAll() {
-    return `This action returns all studentAssignments`;
+  async findAll(): Promise<StudentAssignment[]> {
+    return await this.studentAssignmentRepository.find({
+      order: { created_at: 'DESC' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} studentAssignment`;
+  async findOne(id: string): Promise<StudentAssignment> {
+    const assignment = await this.studentAssignmentRepository.findOneBy({ id });
+    if (!assignment) {
+      throw new NotFoundException(
+        `StudentAssignment with ID "${id}" not found`,
+      );
+    }
+    return assignment;
   }
 
-  update(id: number, updateStudentAssignmentDto: UpdateStudentAssignmentDto) {
-    return `This action updates a #${id} studentAssignment`;
+  async update(
+    id: string,
+    updateStudentAssignmentDto: UpdateStudentAssignmentDto,
+  ): Promise<StudentAssignment> {
+    const assignment = await this.findOne(id);
+    Object.assign(assignment, updateStudentAssignmentDto);
+    return await this.studentAssignmentRepository.save(assignment);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} studentAssignment`;
+  async remove(id: string): Promise<void> {
+    const assignment = await this.findOne(id);
+    await this.studentAssignmentRepository.remove(assignment);
   }
 }

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { StudentAssignmentsService } from './student-assignments.service';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
@@ -19,7 +20,6 @@ export class StudentAssignmentsController {
 
   @Post()
   create(@Body() createStudentAssignmentDto: CreateStudentAssignmentDto) {
-    console.log(createStudentAssignmentDto);
     return this.studentAssignmentsService.create(createStudentAssignmentDto);
   }
 
@@ -29,23 +29,23 @@ export class StudentAssignmentsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.studentAssignmentsService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.studentAssignmentsService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateStudentAssignmentDto: UpdateStudentAssignmentDto,
   ) {
     return this.studentAssignmentsService.update(
-      +id,
+      id,
       updateStudentAssignmentDto,
     );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.studentAssignmentsService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.studentAssignmentsService.remove(id);
   }
 }
