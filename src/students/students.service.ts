@@ -1,9 +1,10 @@
-import { Injectable, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateStudentDto } from './dto/create-student.dto';
-import { UpdateStudentDto } from './dto/update-student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Student } from './entities/student.entity';
 import { Repository } from 'typeorm';
+import { PaginationQueryDto } from '../common/api/dto/pagination-query.dto';
+import { PaginatedResult } from '../common/api/interceptors/global-response.interceptor';
 
 @Injectable()
 export class StudentsService {
@@ -12,28 +13,24 @@ export class StudentsService {
     private readonly studentRepository: Repository<Student>,
   ) {}
 
-  create(createStudentDto: CreateStudentDto) {
+  async create(createStudentDto: CreateStudentDto): Promise<Student> {
     const student = this.studentRepository.create(createStudentDto);
-    return this.studentRepository.save(student);
+    return await this.studentRepository.save(student);
   }
 
-  async findAll(): Promise<Student[]> {
-    console.log(await this.studentRepository.find());
-    return await this.studentRepository.find();
-  }
+  async findAll(
+    pagination: PaginationQueryDto,
+  ): Promise<PaginatedResult<Student[]>> {
+    const { page, limit } = pagination;
+    const [students, total] = await this.studentRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { created_at: 'DESC', id: 'ASC' },
+    });
 
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return `This action returns a #${id} student`;
-  }
-
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    updateStudentDto: UpdateStudentDto,
-  ) {
-    return `This action updates a #${id} student`;
-  }
-
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return `This action removes a #${id} student`;
+    return {
+      data: students,
+      meta: { page, pageSize: limit, total },
+    };
   }
 }

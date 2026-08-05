@@ -1,46 +1,32 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
-import { UpdateStudentDto } from './dto/update-student.dto';
 import { PaginationQueryDto } from '../common/api/dto/pagination-query.dto';
-import { Student } from './entities/student.entity';
+import { PaginatedResult } from '../common/api/interceptors/global-response.interceptor';
+import { StudentResponseDto } from './dto/student-response.dto';
+import { StudentResponseMapper } from './mappers/student-response.mapper';
 
 @Controller('students')
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Post()
-  create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentsService.create(createStudentDto);
+  async create(
+    @Body() createStudentDto: CreateStudentDto,
+  ): Promise<StudentResponseDto> {
+    const student = await this.studentsService.create(createStudentDto);
+    return StudentResponseMapper.toDto(student);
   }
 
   @Get()
-  async findAll(@Query() query: PaginationQueryDto): Promise<Student[]> {
-    console.log(query);
-    return await this.studentsService.findAll();
-  }
+  async findAll(
+    @Query() query: PaginationQueryDto,
+  ): Promise<PaginatedResult<StudentResponseDto[]>> {
+    const result = await this.studentsService.findAll(query);
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.studentsService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
-    return this.studentsService.update(id, updateStudentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.studentsService.remove(id);
+    return {
+      data: StudentResponseMapper.toDtoList(result.data),
+      meta: result.meta,
+    };
   }
 }
