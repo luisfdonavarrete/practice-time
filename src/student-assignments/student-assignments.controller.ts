@@ -7,11 +7,15 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { StudentAssignmentsService } from './student-assignments.service';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
+import { StudentAssignmentResponseDto } from './dto/student-assignment-response.dto';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('student-assignments')
 export class StudentAssignmentsController {
   constructor(
@@ -19,8 +23,12 @@ export class StudentAssignmentsController {
   ) {}
 
   @Post()
-  create(@Body() createStudentAssignmentDto: CreateStudentAssignmentDto) {
-    return this.studentAssignmentsService.create(createStudentAssignmentDto);
+  async create(@Body() createStudentAssignmentDto: CreateStudentAssignmentDto) {
+    const studentAssignment = await this.studentAssignmentsService.create(
+      createStudentAssignmentDto,
+    );
+
+    return new StudentAssignmentResponseDto(studentAssignment);
   }
 
   @Get()
