@@ -5,6 +5,7 @@ import { StudentAssignmentsModule } from './student-assignments/student-assignme
 import { DatabaseModule } from './database/database.module';
 import { AppConfigModule } from './app-config/app.config.module';
 import { StudentsModule } from './students/students.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { StudentsModule } from './students/students.module';
     StudentAssignmentsModule,
     DatabaseModule,
     StudentsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
