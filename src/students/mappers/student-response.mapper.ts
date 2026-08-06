@@ -7,7 +7,7 @@ export class StudentResponseMapper {
       id: student.id,
       first_name: student.first_name,
       last_name: student.last_name,
-      birthdate: student.birthdate,
+      birthdate: student.date_of_birth,
     };
   }
 

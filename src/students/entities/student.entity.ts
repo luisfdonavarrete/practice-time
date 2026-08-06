@@ -24,7 +24,10 @@ export class Student {
   last_name: string;
 
   @Column({ type: 'timestamptz' })
-  birthdate: Date;
+  date_of_birth: Date;
+
+  @Column({ type: 'boolean', default: true })
+  is_active: boolean;
 
   @CreateDateColumn()
   created_at: Date;
