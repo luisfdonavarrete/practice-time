@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { StudentUser } from './student-user.entity';
 
 @Entity()
 export class Student {
@@ -34,4 +36,8 @@ export class Student {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  // “This student has many StudentUser rows. In each of those rows, this student is the value of studentUser.student.”
+  @OneToMany(() => StudentUser, (studentUser) => studentUser.student)
+  user_accesses: StudentUser[];
 }
