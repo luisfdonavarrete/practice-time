@@ -14,7 +14,11 @@ export class StudentsService {
   ) {}
 
   async create(createStudentDto: CreateStudentDto): Promise<Student> {
-    const student = this.studentRepository.create(createStudentDto);
+    const { birthdate, ...studentData } = createStudentDto;
+    const student = this.studentRepository.create({
+      ...studentData,
+      date_of_birth: birthdate,
+    });
     return await this.studentRepository.save(student);
   }
 

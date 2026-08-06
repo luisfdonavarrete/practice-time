@@ -1,7 +1,9 @@
 // can be used later
 import {
+  Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
@@ -18,6 +20,7 @@ export enum StudentUserRelationship {
 }
 
 @Entity('student_users')
+@Index('IDX_student_users_user_id', ['user_id'])
 export class StudentUser {
   @PrimaryColumn({ type: 'uuid' })
   student_id: string;
@@ -25,14 +28,18 @@ export class StudentUser {
   @PrimaryColumn({ type: 'uuid' })
   user_id: string;
 
-  // “This StudentAccess row belongs to one User, stored in user_id.
-  //   On that User, the collection of matching StudentAccess rows is called studentAccesses.”
+  @Column({ type: 'enum', enum: StudentUserRelationship })
+  relationship: StudentUserRelationship;
 
-  @ManyToOne(() => Student, (student) => student.user_accesses)
+  @ManyToOne(() => Student, (student) => student.user_accesses, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'student_id' })
   student: Student;
 
-  @ManyToOne(() => User, (user) => user.student_accesses)
+  @ManyToOne(() => User, (user) => user.student_accesses, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

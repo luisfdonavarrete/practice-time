@@ -16,8 +16,9 @@ export class Student {
   @Column({ nullable: true }) // for now, this should always be required
   school_id: string;
 
-  @Column({ nullable: true })
-  user_id: string;
+  // Optional login identity for students who can authenticate as users.
+  @Column({ type: 'uuid', nullable: true })
+  user_id: string | null;
 
   @Column()
   first_name: string;
@@ -37,7 +38,7 @@ export class Student {
   @UpdateDateColumn()
   updated_at: Date;
 
-  // “This student has many StudentUser rows. In each of those rows, this student is the value of studentUser.student.”
+  // Users who can access this student as a parent, guardian, or other role.
   @OneToMany(() => StudentUser, (studentUser) => studentUser.student)
   user_accesses: StudentUser[];
 }

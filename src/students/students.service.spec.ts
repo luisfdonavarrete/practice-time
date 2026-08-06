@@ -15,9 +15,11 @@ describe('StudentsService', () => {
     user_id: 'internal-user-id',
     first_name: 'Ada',
     last_name: 'Lovelace',
-    birthdate: new Date('1815-12-10T00:00:00.000Z'),
+    date_of_birth: new Date('1815-12-10T00:00:00.000Z'),
+    is_active: true,
     created_at: new Date('2026-08-05T12:00:00.000Z'),
     updated_at: new Date('2026-08-05T12:00:00.000Z'),
+    user_accesses: [],
   };
 
   beforeEach(() => {
@@ -34,13 +36,17 @@ describe('StudentsService', () => {
       const dto: CreateStudentDto = {
         first_name: 'Ada',
         last_name: 'Lovelace',
-        birthdate: student.birthdate,
+        birthdate: student.date_of_birth,
       };
       repository.create.mockReturnValue(student);
       repository.save.mockResolvedValue(student);
 
       await expect(service.create(dto)).resolves.toBe(student);
-      expect(repository.create).toHaveBeenCalledWith(dto);
+      expect(repository.create).toHaveBeenCalledWith({
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        date_of_birth: dto.birthdate,
+      });
       expect(repository.save).toHaveBeenCalledTimes(1);
       expect(repository.save).toHaveBeenCalledWith(student);
     });

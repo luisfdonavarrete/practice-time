@@ -12,15 +12,17 @@ describe('StudentsController', () => {
     user_id: 'internal-user-id',
     first_name: 'Ada',
     last_name: 'Lovelace',
-    birthdate: new Date('1815-12-10T00:00:00.000Z'),
+    date_of_birth: new Date('1815-12-10T00:00:00.000Z'),
+    is_active: true,
     created_at: new Date('2026-08-05T12:00:00.000Z'),
     updated_at: new Date('2026-08-05T12:00:00.000Z'),
+    user_accesses: [],
   };
   const response = {
     id: student.id,
     first_name: student.first_name,
     last_name: student.last_name,
-    birthdate: student.birthdate,
+    birthdate: student.date_of_birth,
   };
 
   beforeEach(() => {
@@ -38,7 +40,7 @@ describe('StudentsController', () => {
       controller.create({
         first_name: 'Ada',
         last_name: 'Lovelace',
-        birthdate: student.birthdate,
+        birthdate: student.date_of_birth,
       }),
     ).resolves.toEqual(response);
   });
