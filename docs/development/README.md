@@ -14,9 +14,9 @@ product, architecture, live demo, and portfolio case study.
 
 ## Prerequisites
 
-Install Node.js, npm, and PostgreSQL. The project does not currently pin a Node
-version, so use a maintained Node.js LTS release that is compatible with the
-locked dependencies.
+Install Node.js, npm, and Docker with Docker Compose. The project does not
+currently pin a Node version, so use a maintained Node.js LTS release that is
+compatible with the locked dependencies.
 
 ## Initial setup
 
@@ -26,18 +26,24 @@ Install the locked dependencies:
 npm install
 ```
 
-Create a local PostgreSQL database, then create `.env.development` or `.env` in
-the repository root:
+Copy the committed development defaults:
+
+```bash
+cp .env.example .env
+```
+
+The example is ready for the local Docker database:
 
 ```dotenv
 NODE_ENV=development
 PORT=3000
+API_PORT=3001
 
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=practice_time
-DB_USERNAME=postgres
-DB_PASSWORD=your-local-password
+DB_USERNAME=practice_time
+DB_PASSWORD=practice_time
 ```
 
 `PORT` defaults to `3000` and `DB_PORT` defaults to `5432`. The remaining
@@ -46,8 +52,11 @@ database values are required. Environment files are loaded in this order:
 1. `.env.<NODE_ENV>`
 2. `.env`
 
-The application currently validates `DB_NAME`. The existing `.env.example`
-uses `DB_DATABASE`; use `DB_NAME` until that example is corrected.
+Start PostgreSQL and wait for its health check to pass:
+
+```bash
+docker compose up -d --wait postgres
+```
 
 Apply the database migrations:
 
@@ -62,6 +71,107 @@ npm run start:dev
 ```
 
 The API is available at `http://localhost:3000` unless `PORT` is changed.
+
+## Daily development workflow
+
+Use Docker only for PostgreSQL and run NestJS directly on the host for fast
+watch-mode recompilation and straightforward debugging.
+
+At the start of a development session:
+
+```bash
+# Start PostgreSQL and wait until it is ready
+docker compose up -d --wait postgres
+
+# Apply migrations added since the last local run
+npm run migration:run
+
+# Start NestJS with file watching
+npm run start:dev
+```
+
+Keep `npm run start:dev` running while editing files under `src/`. Nest recompiles
+and restarts the API when source files change. Stop it with `Ctrl+C`.
+
+PostgreSQL can remain running between sessions. To stop it without deleting its
+data:
+
+```bash
+docker compose stop postgres
+```
+
+When dependencies change, stop the API and run `npm install` before restarting
+watch mode. When entities change, generate and inspect a migration, apply it,
+then restart the API if necessary.
+
+## Dockerized API and PostgreSQL
+
+Build and run the production NestJS image together with PostgreSQL:
+
+```bash
+docker compose up --build -d api
+```
+
+Compose waits for PostgreSQL to become healthy before starting the API. The API
+uses `postgres` as its database hostname inside the Compose network and listens
+on port `3000` in its container. It is available from the host at
+`http://localhost:3001` by default; set `API_PORT` to change the host port.
+
+The API image does not run migrations automatically. Apply pending migrations
+before first use or after pulling schema changes:
+
+```bash
+npm run migration:run
+```
+
+Useful container commands:
+
+```bash
+# Show API and database status
+docker compose ps
+
+# Follow API logs
+docker compose logs -f api
+
+# Rebuild the API after source or dependency changes
+docker compose up --build -d api
+
+# Stop both services while preserving database data
+docker compose down
+```
+
+## Local PostgreSQL container
+
+The `postgres` Compose service uses PostgreSQL 17, publishes the configured
+`DB_PORT`, and persists data in the `postgres-data` Docker volume. It reads the
+same database variables as the NestJS application, so `.env` is the only local
+configuration file needed.
+
+```bash
+# Start PostgreSQL and wait until it is healthy
+docker compose up -d --wait postgres
+
+# Show service state
+docker compose ps
+
+# Follow PostgreSQL logs
+docker compose logs -f postgres
+
+# Stop the container without deleting database data
+docker compose down
+```
+
+To rebuild a disposable local database from the migrations, remove the Compose
+volume and start the service again:
+
+```bash
+docker compose down --volumes
+docker compose up -d --wait postgres
+npm run migration:run
+```
+
+`docker compose down --volumes` permanently deletes the local database stored
+in this Compose project. Do not use it when the data must be preserved.
 
 ## Common commands
 
