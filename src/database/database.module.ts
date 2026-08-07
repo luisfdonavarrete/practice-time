@@ -21,7 +21,8 @@ import { AppConfigModule } from '../app-config/app.config.module';
 
         autoLoadEntities: true,
 
-        synchronize: true,
+        // Database schema changes are managed exclusively through migrations.
+        synchronize: false,
       }),
     }),
   ],
