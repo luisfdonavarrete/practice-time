@@ -23,7 +23,7 @@ export class StudentAssignmentsService {
 
   async findAll(): Promise<StudentAssignment[]> {
     return await this.studentAssignmentRepository.find({
-      order: { created_at: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
   }
 

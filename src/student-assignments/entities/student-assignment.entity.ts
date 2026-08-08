@@ -18,14 +18,14 @@ export class StudentAssignment {
   description?: string;
 
   @Column({ type: 'timestamptz' })
-  start_date: Date;
+  startDate: Date;
 
   @Column({ type: 'timestamptz' })
-  end_date: Date;
+  endDate: Date;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 }

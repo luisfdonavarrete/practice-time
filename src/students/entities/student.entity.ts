@@ -13,32 +13,29 @@ export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true }) // for now, this should always be required
-  school_id: string;
-
   // Optional login identity for students who can authenticate as users.
   @Column({ type: 'uuid', nullable: true })
-  user_id: string | null;
+  userId: string | null;
 
   @Column()
-  first_name: string;
+  firstName: string;
 
   @Column()
-  last_name: string;
+  lastName: string;
 
   @Column({ type: 'timestamptz' })
-  date_of_birth: Date;
+  dateOfBirth: Date;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  isActive: boolean;
 
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updatedAt: Date;
 
   // Users who can access this student as a parent, guardian, or other role.
   @OneToMany(() => StudentUser, (studentUser) => studentUser.student)
-  user_accesses: StudentUser[];
+  userAccesses: StudentUser[];
 }

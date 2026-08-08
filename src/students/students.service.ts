@@ -14,10 +14,11 @@ export class StudentsService {
   ) {}
 
   async create(createStudentDto: CreateStudentDto): Promise<Student> {
-    const { birthdate, ...studentData } = createStudentDto;
+    const { birthdate, first_name, last_name } = createStudentDto;
     const student = this.studentRepository.create({
-      ...studentData,
-      date_of_birth: birthdate,
+      firstName: first_name,
+      lastName: last_name,
+      dateOfBirth: birthdate,
     });
     return await this.studentRepository.save(student);
   }
@@ -29,7 +30,7 @@ export class StudentsService {
     const [students, total] = await this.studentRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      order: { created_at: 'DESC', id: 'ASC' },
+      order: { createdAt: 'DESC', id: 'ASC' },
     });
 
     return {

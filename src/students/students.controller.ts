@@ -3,7 +3,7 @@ import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { PaginationQueryDto } from '../common/api/dto/pagination-query.dto';
 import { PaginatedResult } from '../common/api/interceptors/global-response.interceptor';
-import { StudentResponseDto } from './dto/student-response.dto';
+import { StudentDto } from './dto/student.dto';
 import { StudentResponseMapper } from './mappers/student-response.mapper';
 
 @Controller('students')
@@ -13,7 +13,7 @@ export class StudentsController {
   @Post()
   async create(
     @Body() createStudentDto: CreateStudentDto,
-  ): Promise<StudentResponseDto> {
+  ): Promise<StudentDto> {
     const student = await this.studentsService.create(createStudentDto);
     return StudentResponseMapper.toDto(student);
   }
@@ -21,7 +21,7 @@ export class StudentsController {
   @Get()
   async findAll(
     @Query() query: PaginationQueryDto,
-  ): Promise<PaginatedResult<StudentResponseDto[]>> {
+  ): Promise<PaginatedResult<StudentDto[]>> {
     const result = await this.studentsService.findAll(query);
 
     return {

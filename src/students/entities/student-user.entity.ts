@@ -20,29 +20,29 @@ export enum StudentUserRelationship {
 }
 
 @Entity('student_users')
-@Index('IDX_student_users_user_id', ['user_id'])
+@Index('IDX_student_users_user_id', ['userId'])
 export class StudentUser {
   @PrimaryColumn({ type: 'uuid' })
-  student_id: string;
+  studentId: string;
 
   @PrimaryColumn({ type: 'uuid' })
-  user_id: string;
+  userId: string;
 
   @Column({ type: 'enum', enum: StudentUserRelationship })
   relationship: StudentUserRelationship;
 
-  @ManyToOne(() => Student, (student) => student.user_accesses, {
+  @ManyToOne(() => Student, (student) => student.userAccesses, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'student_id' })
   student: Student;
 
-  @ManyToOne(() => User, (user) => user.student_accesses, {
+  @ManyToOne(() => User, (user) => user.studentAccesses, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 }
