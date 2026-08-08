@@ -13,30 +13,27 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', nullable: true }) // for now
-  school_id: string | null;
-
   @Column({ type: 'varchar', length: 320, unique: true })
   email: string;
 
   @Column({ type: 'varchar', length: 255 })
-  password_hash: string;
+  password: string;
 
   @Column({ type: 'varchar', length: 255 })
-  first_name: string;
+  firstName: string;
 
   @Column({ type: 'varchar', length: 255 })
-  last_name: string;
+  lastName: string;
 
-  @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  @Column({ type: 'timestamptz' })
+  dateOfBirth: Date;
 
   @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @OneToMany(() => StudentUser, (studentUser) => studentUser.user)
-  student_accesses: StudentUser[];
+  studentAccesses: StudentUser[];
 }
