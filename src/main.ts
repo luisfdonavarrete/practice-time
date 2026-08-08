@@ -2,9 +2,9 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './app-config/app.config.service';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { GlobalResponseInterceptor } from './common/interceptors/global-response.interceptor';
 import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
 import { useContainer } from 'class-validator';
+import { updateGlobalConfig } from 'nestjs-paginate';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,12 +19,17 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(
-    new GlobalResponseInterceptor(),
     new LoggerInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
+  updateGlobalConfig({
+    defaultOrigin: undefined,
+    defaultLimit: 20,
+    defaultMaxLimit: 100,
+  });
 
   await app.listen(configService.port);
 }
