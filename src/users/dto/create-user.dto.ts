@@ -1,5 +1,6 @@
 import {
   IsDate,
+  IsByteLength,
   IsEmail,
   IsNotEmpty,
   IsString,
@@ -27,5 +28,6 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsStrongPassword()
+  @IsByteLength(0, 72)
   password: string;
 }
