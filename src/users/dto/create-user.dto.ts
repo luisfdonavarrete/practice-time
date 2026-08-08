@@ -6,7 +6,6 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsEmailUnique } from '../decodators/is-email-unique-validator';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -19,7 +18,6 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsEmail()
-  @IsEmailUnique()
   email: string;
 
   @IsNotEmpty()

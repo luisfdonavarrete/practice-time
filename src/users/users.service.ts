@@ -3,8 +3,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { DuplicateEmailException } from './exceptions/duplicate-email.exception';
+
+const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
 
 @Injectable()
 export class UsersService {
@@ -18,12 +21,18 @@ export class UsersService {
       ...createUserDto,
       password,
     });
-    return this.userRepository.save(user);
-  }
-
-  async doesEmailExist(email: string): Promise<boolean> {
-    const user = await this.userRepository.findOneBy({ email });
-    return !!user;
+    try {
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        (error.driverError as { code?: string }).code ===
+          POSTGRES_UNIQUE_VIOLATION_CODE
+      ) {
+        throw new DuplicateEmailException(createUserDto.email);
+      }
+      throw error;
+    }
   }
 
   async findOne(id: string): Promise<User> {

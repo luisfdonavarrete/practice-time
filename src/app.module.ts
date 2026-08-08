@@ -6,6 +6,8 @@ import { DatabaseModule } from './database/database.module';
 import { AppConfigModule } from './app-config/app.config.module';
 import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
+import { APP_FILTER } from '@nestjs/core';
+import { DuplicateEmailExceptionFilter } from './users/filters/duplicate-email-exception.filter';
 
 @Module({
   imports: [
@@ -16,6 +18,12 @@ import { UsersModule } from './users/users.module';
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: DuplicateEmailExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}
