@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseConfigService } from '../app-config/database.config.service';
 import { AppConfigModule } from '../app-config/app.config.module';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
@@ -20,6 +21,8 @@ import { AppConfigModule } from '../app-config/app.config.module';
         database: config.database,
 
         autoLoadEntities: true,
+
+        namingStrategy: new SnakeNamingStrategy(),
 
         // Database schema changes are managed exclusively through migrations.
         synchronize: false,
