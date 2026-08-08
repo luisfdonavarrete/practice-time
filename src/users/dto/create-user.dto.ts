@@ -5,20 +5,28 @@ import {
   IsNotEmpty,
   IsString,
   IsStrongPassword,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  USER_EMAIL_MAX_LENGTH,
+  USER_NAME_MAX_LENGTH,
+} from '../users.constants';
 
 export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
+  @MaxLength(USER_NAME_MAX_LENGTH)
   firstName: string;
 
   @IsNotEmpty()
   @IsString()
+  @MaxLength(USER_NAME_MAX_LENGTH)
   lastName: string;
 
   @IsNotEmpty()
   @IsEmail()
+  @MaxLength(USER_EMAIL_MAX_LENGTH)
   email: string;
 
   @IsNotEmpty()

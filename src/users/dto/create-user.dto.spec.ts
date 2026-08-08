@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
+import { USER_NAME_MAX_LENGTH } from '../users.constants';
 
 describe('CreateUserDto', () => {
   const createDto = (password: string): CreateUserDto =>
@@ -29,5 +30,26 @@ describe('CreateUserDto', () => {
 
     expect(Buffer.byteLength(password, 'utf8')).toBe(73);
     expect(passwordError?.constraints).toHaveProperty('isByteLength');
+  });
+
+  it.each(['firstName', 'lastName'] as const)(
+    'rejects %s beyond the database column length',
+    async (property) => {
+      const dto = createDto('StrongPassword123!');
+      dto[property] = 'a'.repeat(USER_NAME_MAX_LENGTH + 1);
+
+      const errors = await validate(dto);
+      const nameError = errors.find((error) => error.property === property);
+
+      expect(nameError?.constraints).toHaveProperty('maxLength');
+    },
+  );
+
+  it('accepts names at the database column length', async () => {
+    const dto = createDto('StrongPassword123!');
+    dto.firstName = 'a'.repeat(USER_NAME_MAX_LENGTH);
+    dto.lastName = 'b'.repeat(USER_NAME_MAX_LENGTH);
+
+    await expect(validate(dto)).resolves.toHaveLength(0);
   });
 });
