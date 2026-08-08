@@ -8,7 +8,7 @@ import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
 import { APP_FILTER } from '@nestjs/core';
 import { DuplicateEmailExceptionFilter } from './users/filters/duplicate-email-exception.filter';
-import { EntityNotFoundExceptionFilter } from './common/api/filters/entity-not-found-exception.filter';
+import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found-exception.filter';
 
 @Module({
   imports: [

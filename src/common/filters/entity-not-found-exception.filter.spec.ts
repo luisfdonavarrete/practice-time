@@ -1,7 +1,7 @@
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { EntityNotFoundError } from 'typeorm';
-import { User } from '../../../users/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { EntityNotFoundExceptionFilter } from './entity-not-found-exception.filter';
 
 describe('EntityNotFoundExceptionFilter', () => {

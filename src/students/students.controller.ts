@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
-import { PaginationQueryDto } from '../common/api/dto/pagination-query.dto';
-import { PaginatedResult } from '../common/api/interceptors/global-response.interceptor';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { PaginatedResult } from '../common/interceptors/global-response.interceptor';
 import { StudentDto } from './dto/student.dto';
 import { StudentResponseMapper } from './mappers/student-response.mapper';
 

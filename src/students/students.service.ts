@@ -3,8 +3,8 @@ import { CreateStudentDto } from './dto/create-student.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Student } from './entities/student.entity';
 import { Repository } from 'typeorm';
-import { PaginationQueryDto } from '../common/api/dto/pagination-query.dto';
-import { PaginatedResult } from '../common/api/interceptors/global-response.interceptor';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { PaginatedResult } from '../common/interceptors/global-response.interceptor';
 
 @Injectable()
 export class StudentsService {

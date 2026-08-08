@@ -2,8 +2,8 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './app-config/app.config.service';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
-import { GlobalResponseInterceptor } from './common/api/interceptors/global-response.interceptor';
-import { LoggerInterceptor } from './common/api/interceptors/logger.interceptor';
+import { GlobalResponseInterceptor } from './common/interceptors/global-response.interceptor';
+import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
 import { useContainer } from 'class-validator';
 
 async function bootstrap() {
