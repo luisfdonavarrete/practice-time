@@ -5,6 +5,7 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { LoggerInterceptor } from './common/interceptors/logger.interceptor';
 import { useContainer } from 'class-validator';
 import { updateGlobalConfig } from 'nestjs-paginate';
+import { GlobalResponseInterceptor } from './common/interceptors/global-response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,7 @@ async function bootstrap() {
   );
 
   app.useGlobalInterceptors(
+    new GlobalResponseInterceptor(),
     new LoggerInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );

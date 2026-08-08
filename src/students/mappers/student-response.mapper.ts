@@ -1,11 +1,14 @@
 import { StudentDto } from '../dto/student.dto';
 import { Student } from '../entities/student.entity';
-import { plainToClass } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { Paginated } from 'nestjs-paginate';
+import { PaginatedStudentDto } from '../dto/paginated-students.dto';
 
 export class StudentResponseMapper {
   static toDto(student: Student): StudentDto {
-    return plainToClass(StudentDto, student);
+    return plainToInstance(StudentDto, student, {
+      excludeExtraneousValues: true,
+    });
   }
 
   static toDtoList(students: Student[]): StudentDto[] {
@@ -14,10 +17,10 @@ export class StudentResponseMapper {
 
   static toDtoListFromPaginated(
     paginated: Paginated<Student>,
-  ): Paginated<StudentDto> {
+  ): PaginatedStudentDto {
     return {
       ...paginated,
       data: StudentResponseMapper.toDtoList(paginated.data),
-    } as Paginated<StudentDto>;
+    };
   }
 }
