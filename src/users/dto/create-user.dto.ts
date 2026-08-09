@@ -12,6 +12,7 @@ import {
   USER_EMAIL_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
 } from '../users.constants';
+import { NormalizeString } from '../../common/decorators/normalize-string.decorator';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -25,6 +26,7 @@ export class CreateUserDto {
   lastName: string;
 
   @IsNotEmpty()
+  @NormalizeString({ trim: true, case: 'lower' })
   @IsEmail()
   @MaxLength(USER_EMAIL_MAX_LENGTH)
   email: string;

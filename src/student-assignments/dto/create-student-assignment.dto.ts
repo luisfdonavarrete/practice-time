@@ -1,20 +1,17 @@
 import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
+import { NormalizeString } from '../../common/decorators/normalize-string.decorator';
 import { IsAfterDate } from './validators/is-after-date.decorator';
 
 export class CreateStudentAssignmentDto {
   @IsNotEmpty()
   @IsString()
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @NormalizeString({ trim: true })
   title: string;
 
   @IsOptional()
   @IsString()
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
+  @NormalizeString({ trim: true })
   description?: string;
 
   @IsNotEmpty()

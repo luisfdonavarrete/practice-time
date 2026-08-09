@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateUserDto } from './create-user.dto';
 import { USER_NAME_MAX_LENGTH } from '../users.constants';
@@ -12,6 +13,14 @@ describe('CreateUserDto', () => {
       dateOfBirth: new Date('2000-01-01'),
       password,
     });
+
+  it('trims and lowercases the email address', () => {
+    const dto = plainToInstance(CreateUserDto, {
+      email: '  Student@EXAMPLE.COM  ',
+    });
+
+    expect(dto.email).toBe('student@example.com');
+  });
 
   it('accepts a strong password at the bcrypt byte limit', async () => {
     const password = `Aa1!${'a'.repeat(68)}`;

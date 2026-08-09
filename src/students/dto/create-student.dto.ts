@@ -1,18 +1,15 @@
 import { IsDate, IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-
-function trimString(value: unknown): unknown {
-  return typeof value === 'string' ? value.trim() : value;
-}
+import { Type } from 'class-transformer';
+import { NormalizeString } from '../../common/decorators/normalize-string.decorator';
 
 export class CreateStudentDto {
-  @Transform(({ value }) => trimString(value))
+  @NormalizeString({ trim: true })
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
   first_name: string;
 
-  @Transform(({ value }) => trimString(value))
+  @NormalizeString({ trim: true })
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
