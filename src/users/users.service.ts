@@ -4,8 +4,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import { DuplicateEmailException } from './exceptions/duplicate-email.exception';
+import { HashingService } from '../hashing/hashing.service';
 
 const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
 
@@ -13,10 +13,11 @@ const POSTGRES_UNIQUE_VIOLATION_CODE = '23505';
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly hashingService: HashingService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const password = await bcrypt.hash(createUserDto.password, 10);
+    const password = await this.hashingService.hashing(createUserDto.password);
     const user = this.userRepository.create({
       ...createUserDto,
       password,

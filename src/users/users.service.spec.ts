@@ -3,9 +3,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { DuplicateEmailException } from './exceptions/duplicate-email.exception';
 import { UsersService } from './users.service';
+import { HashingService } from '../hashing/hashing.service';
 
 describe('UsersService', () => {
   let repository: jest.Mocked<Repository<User>>;
+  let hashingService: jest.Mocked<HashingService>;
   let service: UsersService;
   let create: jest.Mock;
   let save: jest.Mock;
@@ -34,7 +36,10 @@ describe('UsersService', () => {
       save,
       findOneBy: jest.fn(),
     } as unknown as jest.Mocked<Repository<User>>;
-    service = new UsersService(repository);
+    hashingService = {
+      hashing: jest.fn().mockResolvedValue('hashed-password'),
+    };
+    service = new UsersService(repository, hashingService);
   });
 
   it('translates a unique violation to a duplicate email exception', async () => {
