@@ -15,18 +15,21 @@ import { UserDto } from './dto/user.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userResponseMapper: UserResponseMapper,
+  ) {}
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
-    return UserResponseMapper.toDto(user);
+    return this.userResponseMapper.toDto(user);
   }
 
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
     const user = await this.usersService.findOne(id);
-    return UserResponseMapper.toDto(user);
+    return this.userResponseMapper.toDto(user);
   }
 
   @Patch(':id')
@@ -35,6 +38,6 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDto> {
     const user = await this.usersService.update(id, updateUserDto);
-    return UserResponseMapper.toDto(user);
+    return this.userResponseMapper.toDto(user);
   }
 }

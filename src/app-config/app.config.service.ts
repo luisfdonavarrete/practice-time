@@ -12,4 +12,12 @@ export class AppConfigService {
   get port(): number {
     return +this.configService.get<number>('PORT')!;
   }
+
+  get jwtSecret(): string {
+    return this.configService.get<string>('JWT_SECRET')!;
+  }
+
+  get jwtExpiresIn(): string | number {
+    return this.configService.get<string | number>('JWT_EXPIRES')!;
+  }
 }

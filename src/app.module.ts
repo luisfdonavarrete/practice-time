@@ -9,6 +9,8 @@ import { UsersModule } from './users/users.module';
 import { APP_FILTER } from '@nestjs/core';
 import { DuplicateEmailExceptionFilter } from './users/filters/duplicate-email-exception.filter';
 import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found-exception.filter';
+import { AuthModule } from './auth/auth.module';
+import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exception.filter';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found
     DatabaseModule,
     StudentsModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -28,6 +31,10 @@ import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found
     {
       provide: APP_FILTER,
       useClass: EntityNotFoundExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: LoginFailedExceptionFilter,
     },
   ],
 })
