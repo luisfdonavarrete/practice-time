@@ -9,7 +9,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: jest.Mocked<Pick<AuthService, 'singUp' | 'signIn'>>;
+  let authService: jest.Mocked<Pick<AuthService, 'signUp' | 'signIn'>>;
 
   const user = {
     id: '6d88f936-dd07-420b-ae65-e33e302d7041',
@@ -22,7 +22,7 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     authService = {
-      singUp: jest.fn(),
+      signUp: jest.fn(),
       signIn: jest.fn(),
     };
 
@@ -49,11 +49,11 @@ describe('AuthController', () => {
       password: 'StrongPassword1!',
       dateOfBirth: user.dateOfBirth,
     } as SignUpDto;
-    authService.singUp.mockResolvedValue(user);
+    authService.signUp.mockResolvedValue(user);
 
     const result = await controller.signup(signUpDto);
 
-    expect(authService.singUp).toHaveBeenCalledWith(signUpDto);
+    expect(authService.signUp).toHaveBeenCalledWith(signUpDto);
     expect(result).toEqual({
       id: user.id,
       email: user.email,

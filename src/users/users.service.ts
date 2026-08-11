@@ -44,6 +44,21 @@ export class UsersService {
     });
   }
 
+  fetchUserDetailsForRequest(
+    id: string,
+  ): Promise<Pick<User, 'id' | 'email' | 'isActive'> | null> {
+    return this.userRepository.findOne({
+      select: {
+        id: true,
+        email: true,
+        isActive: true,
+      },
+      where: {
+        id,
+      },
+    });
+  }
+
   findOneByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: {

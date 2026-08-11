@@ -3,7 +3,6 @@ import {
   Catch,
   ExceptionFilter,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { BaseExceptionFilter, HttpAdapterHost } from '@nestjs/core';

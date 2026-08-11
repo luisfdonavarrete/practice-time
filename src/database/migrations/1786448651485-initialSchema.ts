@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1786226244551 implements MigrationInterface {
-    name = 'InitialSchema1786226244551'
+export class InitialSchema1786448651485 implements MigrationInterface {
+    name = 'InitialSchema1786448651485'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
@@ -17,6 +17,19 @@ export class InitialSchema1786226244551 implements MigrationInterface {
             )
         `);
         await queryRunner.query(`
+            CREATE TABLE "student" (
+                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+                "user_id" uuid,
+                "first_name" character varying NOT NULL,
+                "last_name" character varying NOT NULL,
+                "date_of_birth" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "is_active" boolean NOT NULL DEFAULT true,
+                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                CONSTRAINT "PK_3d8016e1cb58429474a3c041904" PRIMARY KEY ("id")
+            )
+        `);
+        await queryRunner.query(`
             CREATE TABLE "users" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "email" character varying(255) NOT NULL,
@@ -24,6 +37,7 @@ export class InitialSchema1786226244551 implements MigrationInterface {
                 "first_name" character varying(100) NOT NULL,
                 "last_name" character varying(100) NOT NULL,
                 "date_of_birth" TIMESTAMP WITH TIME ZONE NOT NULL,
+                "is_active" boolean NOT NULL DEFAULT true,
                 "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
                 CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
@@ -43,19 +57,6 @@ export class InitialSchema1786226244551 implements MigrationInterface {
             CREATE INDEX "IDX_student_users_user_id" ON "student_users" ("user_id")
         `);
         await queryRunner.query(`
-            CREATE TABLE "student" (
-                "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
-                "user_id" uuid,
-                "first_name" character varying NOT NULL,
-                "last_name" character varying NOT NULL,
-                "date_of_birth" TIMESTAMP WITH TIME ZONE NOT NULL,
-                "is_active" boolean NOT NULL DEFAULT true,
-                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
-                CONSTRAINT "PK_3d8016e1cb58429474a3c041904" PRIMARY KEY ("id")
-            )
-        `);
-        await queryRunner.query(`
             ALTER TABLE "student_users"
             ADD CONSTRAINT "FK_5cf595c59756fd1dc04923aea77" FOREIGN KEY ("student_id") REFERENCES "student"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
@@ -73,9 +74,6 @@ export class InitialSchema1786226244551 implements MigrationInterface {
             ALTER TABLE "student_users" DROP CONSTRAINT "FK_5cf595c59756fd1dc04923aea77"
         `);
         await queryRunner.query(`
-            DROP TABLE "student"
-        `);
-        await queryRunner.query(`
             DROP INDEX "public"."IDX_student_users_user_id"
         `);
         await queryRunner.query(`
@@ -83,6 +81,9 @@ export class InitialSchema1786226244551 implements MigrationInterface {
         `);
         await queryRunner.query(`
             DROP TABLE "users"
+        `);
+        await queryRunner.query(`
+            DROP TABLE "student"
         `);
         await queryRunner.query(`
             DROP TABLE "student_assignments"

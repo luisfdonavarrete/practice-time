@@ -32,6 +32,9 @@ export class User {
   @Column({ type: 'timestamptz' })
   dateOfBirth: Date;
 
+  @Column({ default: true })
+  isActive: boolean;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

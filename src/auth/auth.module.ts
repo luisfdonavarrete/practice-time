@@ -6,11 +6,14 @@ import { UsersModule } from '../users/users.module';
 import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
 import { AppConfigModule } from '../app-config/app.config.module';
 import { AppConfigService } from '../app-config/app.config.service';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
     HashingModule,
     UsersModule,
+    AppConfigModule,
     JwtModule.registerAsync({
       global: true,
       imports: [AppConfigModule],
@@ -26,6 +29,6 @@ import { AppConfigService } from '../app-config/app.config.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
 })
 export class AuthModule {}
