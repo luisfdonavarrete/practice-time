@@ -7,16 +7,16 @@ export class CreateStudentDto {
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
-  first_name: string;
+  firstName: string;
 
   @NormalizeString({ trim: true })
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
-  last_name: string;
+  lastName: string;
 
   @IsNotEmpty()
   @IsDate()
   @Type(() => Date)
-  birthdate: Date;
+  dateOfBirth: Date;
 }

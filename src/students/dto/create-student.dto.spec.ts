@@ -4,27 +4,27 @@ import { validate } from 'class-validator';
 import { CreateStudentDto } from './create-student.dto';
 
 describe('CreateStudentDto', () => {
-  it('trims names and transforms a valid birthdate', async () => {
+  it('trims names and transforms a valid date of birth', async () => {
     const dto = plainToInstance(CreateStudentDto, {
-      first_name: '  Ada  ',
-      last_name: '  Lovelace  ',
-      birthdate: '1815-12-10T00:00:00.000Z',
+      firstName: '  Ada  ',
+      lastName: '  Lovelace  ',
+      dateOfBirth: '1815-12-10T00:00:00.000Z',
     });
 
     await expect(validate(dto)).resolves.toHaveLength(0);
-    expect(dto).toMatchObject({ first_name: 'Ada', last_name: 'Lovelace' });
-    expect(dto.birthdate).toBeInstanceOf(Date);
+    expect(dto).toMatchObject({ firstName: 'Ada', lastName: 'Lovelace' });
+    expect(dto.dateOfBirth).toBeInstanceOf(Date);
   });
 
   it.each([
-    ['blank first name', { first_name: '   ' }],
-    ['oversized first name', { first_name: 'a'.repeat(256) }],
-    ['invalid birthdate', { birthdate: 'not-a-date' }],
+    ['blank first name', { firstName: '   ' }],
+    ['oversized first name', { firstName: 'a'.repeat(256) }],
+    ['invalid date of birth', { dateOfBirth: 'not-a-date' }],
   ])('rejects %s', async (_caseName, override) => {
     const dto = plainToInstance(CreateStudentDto, {
-      first_name: 'Ada',
-      last_name: 'Lovelace',
-      birthdate: '1815-12-10T00:00:00.000Z',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      dateOfBirth: '1815-12-10T00:00:00.000Z',
       ...override,
     });
 

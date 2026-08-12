@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AppConfigService } from '../app-config/app.config.service';
 import { UsersService } from '../users/users.service';
 import { JwtPayloadDto } from './dto/jwt-payload.dto';
-import { AuthenticatedUserDto } from './dto/authenticated-user.dto';
+import { AuthenticatedUser } from './models/authenticated-user';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayloadDto): Promise<AuthenticatedUserDto> {
+  async validate(payload: JwtPayloadDto): Promise<AuthenticatedUser> {
     if (!payload.sub) {
       throw new UnauthorizedException();
     }

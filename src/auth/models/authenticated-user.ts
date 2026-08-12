@@ -1,4 +1,4 @@
-export class AuthenticatedUserDto {
+export class AuthenticatedUser {
   userId: string;
   email: string;
 }

@@ -1,12 +1,12 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { AuthenticatedUserDto } from '../dto/authenticated-user.dto';
+import { AuthenticatedUser } from '../models/authenticated-user';
 import { Request } from 'express';
 
 export const CurrentUser = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): AuthenticatedUserDto => {
+  (_data: unknown, ctx: ExecutionContext): AuthenticatedUser => {
     const request = ctx
       .switchToHttp()
-      .getRequest<Request & { user: AuthenticatedUserDto }>();
+      .getRequest<Request & { user: AuthenticatedUser }>();
     return request.user;
   },
 );
