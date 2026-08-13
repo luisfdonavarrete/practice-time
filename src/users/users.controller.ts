@@ -1,17 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  ParseUUIDPipe,
-} from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseMapper } from './mappers/user-response.mapper';
 import { UserDto } from './dto/user.dto';
+import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
+import { AuthenticatedUser } from '../auth/models/authenticated-user';
 
 @Controller('users')
 export class UsersController {
@@ -20,24 +13,23 @@ export class UsersController {
     private readonly userResponseMapper: UserResponseMapper,
   ) {}
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.usersService.create(createUserDto);
+  @Get('me')
+  async findCurrentUser(
+    @CurrentUser() authenticatedUser: AuthenticatedUser,
+  ): Promise<UserDto> {
+    const user = await this.usersService.findOne(authenticatedUser.userId);
     return this.userResponseMapper.toDto(user);
   }
 
-  @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
-    const user = await this.usersService.findOne(id);
-    return this.userResponseMapper.toDto(user);
-  }
-
-  @Patch(':id')
-  async update(
-    @Param('id', ParseUUIDPipe) id: string,
+  @Patch('me')
+  async updateCurrentUser(
+    @CurrentUser() authenticatedUser: AuthenticatedUser,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDto> {
-    const user = await this.usersService.update(id, updateUserDto);
+    const user = await this.usersService.update(
+      authenticatedUser.userId,
+      updateUserDto,
+    );
     return this.userResponseMapper.toDto(user);
   }
 }
