@@ -30,9 +30,11 @@ export class AuthController {
   }
 
   @Get('/me')
-  getProfile(
+  async getProfile(
     @CurrentUser() authenticatedUser: AuthenticatedUser,
-  ): AuthenticatedUser {
-    return authenticatedUser;
+  ): Promise<UserDto> {
+    return this.userResponseMapper.toDto(
+      await this.authService.getCurrentUser(authenticatedUser.userId),
+    );
   }
 }

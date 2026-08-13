@@ -1,9 +1,18 @@
-import { IsDate, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { NormalizeString } from '../../common/decorators/normalize-string.decorator';
 import { IsAfterDate } from './validators/is-after-date.decorator';
 
 export class CreateStudentAssignmentDto {
+  @IsUUID()
+  studentId: string;
+
   @IsNotEmpty()
   @IsString()
   @NormalizeString({ trim: true })
@@ -17,11 +26,11 @@ export class CreateStudentAssignmentDto {
   @IsNotEmpty()
   @Type(() => Date)
   @IsDate()
-  start_date: Date;
+  startDate: Date;
 
   @IsNotEmpty()
   @Type(() => Date)
   @IsDate()
-  @IsAfterDate('start_date', {})
-  end_date: Date;
+  @IsAfterDate('startDate', {})
+  endDate: Date;
 }

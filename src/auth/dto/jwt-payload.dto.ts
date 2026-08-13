@@ -1,6 +1,5 @@
-export class JwtPayloadDto {
-  iss?: string; // to do - add issuer
-  exp?: string; // to do - add expiration date
+export interface JwtPayloadDto {
   sub: string;
-  aud?: string; // to do - add audience
+  iat?: number;
+  exp?: number;
 }

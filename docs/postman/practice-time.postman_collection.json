@@ -134,7 +134,7 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  const body = pm.response.json();",
-                  "  if (body.data && body.data.userId) pm.collectionVariables.set('userId', body.data.userId);",
+                  "  if (body.data && body.data.id) pm.collectionVariables.set('userId', body.data.id);",
                   "}"
                 ]
               }
@@ -147,11 +147,14 @@
       "name": "Application",
       "item": [
         {
-          "name": "Get root",
+          "name": "Get health",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "url": "{{baseUrl}}/",
-            "description": "Returns the current Hello World response. This route is protected by the global JWT guard."
+            "url": "{{baseUrl}}/health",
+            "description": "Public operational health check."
           }
         }
       ]
@@ -223,7 +226,7 @@
                 }
               ]
             },
-            "description": "Returns only students visible through the current relationship/ownership query."
+            "description": "Returns only active students owned by the authenticated user."
           }
         },
         {
@@ -248,6 +251,14 @@
               "raw": "{\n  \"firstName\": \"Alexandra\"\n}"
             },
             "url": "{{baseUrl}}/students/{{studentId}}"
+          }
+        },
+        {
+          "name": "Deactivate student",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/students/{{studentId}}",
+            "description": "Soft-deactivates an owned student. Run this after assignment requests."
           }
         }
       ]
@@ -284,7 +295,7 @@
     },
     {
       "name": "Student assignments",
-      "description": "These endpoints represent the currently implemented basic assignment CRUD. The current entity does not yet link assignments to students.",
+      "description": "Assignment CRUD scoped to the authenticated owner through the required studentId.",
       "item": [
         {
           "name": "Create assignment",
@@ -298,7 +309,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"start_date\": \"2026-08-17T00:00:00.000Z\",\n  \"end_date\": \"2026-08-23T23:59:59.000Z\"\n}"
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"startDate\": \"2026-08-17T00:00:00.000Z\",\n  \"endDate\": \"2026-08-23T23:59:59.000Z\"\n}"
             },
             "url": "{{baseUrl}}/student-assignments"
           },

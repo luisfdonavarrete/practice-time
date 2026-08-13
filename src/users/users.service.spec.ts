@@ -25,7 +25,7 @@ describe('UsersService', () => {
     id: '018f0542-f7c8-7d56-a4c8-53bffd426a9a',
     createdAt: new Date(),
     updatedAt: new Date(),
-    studentAccesses: [],
+    students: [],
   } as User;
 
   beforeEach(() => {

@@ -8,6 +8,9 @@ import { User } from '../users/entities/user.entity';
 import { LoginFailedException } from './exceptions/login-failed.exception';
 import { JwtPayloadDto } from './dto/jwt-payload.dto';
 
+const DUMMY_PASSWORD_HASH =
+  '$2b$10$hXeg8XU80IpaMaHdTephruVL4Ea9Fh2waFUPnWgfjUzx2cRjx1pji';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,16 +23,17 @@ export class AuthService {
     return this.usersService.create(signUpDto);
   }
 
+  getCurrentUser(userId: string): Promise<User> {
+    return this.usersService.findOne(userId);
+  }
+
   async signIn(loginDto: LoginDto): Promise<string> {
     const user = await this.usersService.findOneByEmail(loginDto.email);
-    if (!user) {
-      throw new LoginFailedException();
-    }
     const valid = await this.hashingService.compare(
       loginDto.password,
-      user.password,
+      user?.password ?? DUMMY_PASSWORD_HASH,
     );
-    if (!valid) {
+    if (!user || !user.isActive || !valid) {
       throw new LoginFailedException();
     }
     const payload: JwtPayloadDto = { sub: user.id };

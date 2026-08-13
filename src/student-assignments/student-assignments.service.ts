@@ -4,31 +4,51 @@ import { Repository } from 'typeorm';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
 import { StudentAssignment } from './entities/student-assignment.entity';
+import { Student } from '../students/entities/student.entity';
 
 @Injectable()
 export class StudentAssignmentsService {
   constructor(
     @InjectRepository(StudentAssignment)
     private readonly studentAssignmentRepository: Repository<StudentAssignment>,
+    @InjectRepository(Student)
+    private readonly studentRepository: Repository<Student>,
   ) {}
 
   async create(
     createStudentAssignmentDto: CreateStudentAssignmentDto,
+    ownerUserId: string,
   ): Promise<StudentAssignment> {
-    const assignment = this.studentAssignmentRepository.create(
-      createStudentAssignmentDto,
-    );
-    return await this.studentAssignmentRepository.save(assignment);
-  }
-
-  async findAll(): Promise<StudentAssignment[]> {
-    return await this.studentAssignmentRepository.find({
-      order: { createdAt: 'DESC' },
+    await this.studentRepository.findOneOrFail({
+      where: {
+        id: createStudentAssignmentDto.studentId,
+        ownerUserId,
+        isActive: true,
+      },
     });
+    const assignment = this.studentAssignmentRepository.create({
+      ...createStudentAssignmentDto,
+      creatorUserId: ownerUserId,
+    });
+    return this.studentAssignmentRepository.save(assignment);
   }
 
-  async findOne(id: string): Promise<StudentAssignment> {
-    const assignment = await this.studentAssignmentRepository.findOneBy({ id });
+  findAll(ownerUserId: string): Promise<StudentAssignment[]> {
+    return this.studentAssignmentRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.student', 'student')
+      .where('student.owner_user_id = :ownerUserId', { ownerUserId })
+      .orderBy('assignment.created_at', 'DESC')
+      .getMany();
+  }
+
+  async findOne(ownerUserId: string, id: string): Promise<StudentAssignment> {
+    const assignment = await this.studentAssignmentRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.student', 'student')
+      .where('assignment.id = :id', { id })
+      .andWhere('student.owner_user_id = :ownerUserId', { ownerUserId })
+      .getOne();
     if (!assignment) {
       throw new NotFoundException(
         `StudentAssignment with ID "${id}" not found`,
@@ -39,15 +59,16 @@ export class StudentAssignmentsService {
 
   async update(
     id: string,
+    ownerUserId: string,
     updateStudentAssignmentDto: UpdateStudentAssignmentDto,
   ): Promise<StudentAssignment> {
-    const assignment = await this.findOne(id);
+    const assignment = await this.findOne(ownerUserId, id);
     Object.assign(assignment, updateStudentAssignmentDto);
-    return await this.studentAssignmentRepository.save(assignment);
+    return this.studentAssignmentRepository.save(assignment);
   }
 
-  async remove(id: string): Promise<void> {
-    const assignment = await this.findOne(id);
+  async remove(ownerUserId: string, id: string): Promise<void> {
+    const assignment = await this.findOne(ownerUserId, id);
     await this.studentAssignmentRepository.remove(assignment);
   }
 }

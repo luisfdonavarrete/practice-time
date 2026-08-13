@@ -7,7 +7,9 @@ import { LoginResponseDto } from './dto/login-response.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: jest.Mocked<Pick<AuthService, 'signUp' | 'signIn'>>;
+  let authService: jest.Mocked<
+    Pick<AuthService, 'signUp' | 'signIn' | 'getCurrentUser'>
+  >;
 
   const user = {
     id: '6d88f936-dd07-420b-ae65-e33e302d7041',
@@ -22,6 +24,7 @@ describe('AuthController', () => {
     authService = {
       signUp: jest.fn(),
       signIn: jest.fn(),
+      getCurrentUser: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -73,5 +76,22 @@ describe('AuthController', () => {
     expect(authService.signIn).toHaveBeenCalledWith(loginDto);
     expect(result).toBeInstanceOf(LoginResponseDto);
     expect(result).toEqual({ access_token: 'signed-token' });
+  });
+
+  it('returns the current safe user profile', async () => {
+    authService.getCurrentUser.mockResolvedValue(user);
+
+    const result = await controller.getProfile({
+      userId: user.id,
+      email: user.email,
+    });
+
+    expect(authService.getCurrentUser).toHaveBeenCalledWith(user.id);
+    expect(result).toEqual({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
   });
 });

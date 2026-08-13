@@ -1,6 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { CreateStudentAssignmentDto } from './create-student-assignment.dto';
 
 export class UpdateStudentAssignmentDto extends PartialType(
-  CreateStudentAssignmentDto,
+  OmitType(CreateStudentAssignmentDto, ['studentId'] as const),
 ) {}

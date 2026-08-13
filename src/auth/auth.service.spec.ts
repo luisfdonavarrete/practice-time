@@ -9,7 +9,7 @@ import { LoginFailedException } from './exceptions/login-failed.exception';
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: jest.Mocked<
-    Pick<UsersService, 'create' | 'findOneByEmail'>
+    Pick<UsersService, 'create' | 'findOne' | 'findOneByEmail'>
   >;
   let hashingService: jest.Mocked<Pick<HashingService, 'compare'>>;
   let jwtService: jest.Mocked<Pick<JwtService, 'signAsync'>>;
@@ -18,6 +18,7 @@ describe('AuthService', () => {
     id: '6d88f936-dd07-420b-ae65-e33e302d7041',
     email: 'user@example.com',
     password: 'hashed-password',
+    isActive: true,
   } as User;
   const loginDto = {
     email: user.email,
@@ -27,6 +28,7 @@ describe('AuthService', () => {
   beforeEach(async () => {
     usersService = {
       create: jest.fn(),
+      findOne: jest.fn(),
       findOneByEmail: jest.fn(),
     };
     hashingService = { compare: jest.fn() };
@@ -63,13 +65,16 @@ describe('AuthService', () => {
     });
   });
 
-  it('rejects an unknown email without comparing a password', async () => {
+  it('rejects an unknown email after a dummy password comparison', async () => {
     usersService.findOneByEmail.mockResolvedValue(null);
 
     await expect(service.signIn(loginDto)).rejects.toBeInstanceOf(
       LoginFailedException,
     );
-    expect(hashingService.compare).not.toHaveBeenCalled();
+    expect(hashingService.compare).toHaveBeenCalledWith(
+      loginDto.password,
+      expect.stringMatching(/^\$2b\$/),
+    );
     expect(jwtService.signAsync).not.toHaveBeenCalled();
   });
 

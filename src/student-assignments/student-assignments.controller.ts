@@ -14,6 +14,8 @@ import { StudentAssignmentsService } from './student-assignments.service';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
 import { StudentAssignmentResponseDto } from './dto/student-assignment-response.dto';
+import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
+import { AuthenticatedUser } from '../auth/models/authenticated-user';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('student-assignments')
@@ -23,37 +25,58 @@ export class StudentAssignmentsController {
   ) {}
 
   @Post()
-  async create(@Body() createStudentAssignmentDto: CreateStudentAssignmentDto) {
+  async create(
+    @Body() createStudentAssignmentDto: CreateStudentAssignmentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const studentAssignment = await this.studentAssignmentsService.create(
       createStudentAssignmentDto,
+      user.userId,
     );
 
     return new StudentAssignmentResponseDto(studentAssignment);
   }
 
   @Get()
-  findAll() {
-    return this.studentAssignmentsService.findAll();
+  async findAll(@CurrentUser() user: AuthenticatedUser) {
+    const assignments = await this.studentAssignmentsService.findAll(
+      user.userId,
+    );
+    return assignments.map(
+      (assignment) => new StudentAssignmentResponseDto(assignment),
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.studentAssignmentsService.findOne(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return new StudentAssignmentResponseDto(
+      await this.studentAssignmentsService.findOne(user.userId, id),
+    );
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateStudentAssignmentDto: UpdateStudentAssignmentDto,
+    @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.studentAssignmentsService.update(
-      id,
-      updateStudentAssignmentDto,
+    return new StudentAssignmentResponseDto(
+      await this.studentAssignmentsService.update(
+        id,
+        user.userId,
+        updateStudentAssignmentDto,
+      ),
     );
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.studentAssignmentsService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.studentAssignmentsService.remove(user.userId, id);
   }
 }

@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { StudentUser } from '../../students/entities/student-user.entity';
+import { Student } from '../../students/entities/student.entity';
 import {
   USER_NAME_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
@@ -20,7 +20,7 @@ export class User {
   @Column({ type: 'varchar', length: USER_EMAIL_MAX_LENGTH, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, select: false })
   password: string;
 
   @Column({ type: 'varchar', length: USER_NAME_MAX_LENGTH })
@@ -41,6 +41,6 @@ export class User {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @OneToMany(() => StudentUser, (studentUser) => studentUser.user)
-  studentAccesses: StudentUser[];
+  @OneToMany(() => Student, (student) => student.owner)
+  students: Student[];
 }

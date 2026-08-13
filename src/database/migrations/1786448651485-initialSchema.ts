@@ -45,6 +45,9 @@ export class InitialSchema1786448651485 implements MigrationInterface {
             )
         `);
     await queryRunner.query(`
+            CREATE TYPE "public"."student_users_relationship_enum" AS ENUM('self', 'parent', 'guardian', 'caregiver', 'other')
+        `);
+    await queryRunner.query(`
             CREATE TABLE "student_users" (
                 "student_id" uuid NOT NULL,
                 "user_id" uuid NOT NULL,
@@ -78,6 +81,9 @@ export class InitialSchema1786448651485 implements MigrationInterface {
         `);
     await queryRunner.query(`
             DROP TABLE "student_users"
+        `);
+    await queryRunner.query(`
+            DROP TYPE "public"."student_users_relationship_enum"
         `);
     await queryRunner.query(`
             DROP TABLE "users"

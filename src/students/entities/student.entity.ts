@@ -2,20 +2,24 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { StudentUser } from './student-user.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // Optional login identity for students who can authenticate as users.
-  @Column({ type: 'uuid', nullable: true })
-  userId: string | null;
+  @Column({ type: 'uuid' })
+  ownerUserId: string;
+
+  @ManyToOne(() => User, (user) => user.students, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'owner_user_id' })
+  owner: User;
 
   @Column()
   firstName: string;
@@ -34,8 +38,4 @@ export class Student {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  // Users who can access this student as a parent, guardian, or other role.
-  @OneToMany(() => StudentUser, (studentUser) => studentUser.student)
-  userAccesses: StudentUser[];
 }

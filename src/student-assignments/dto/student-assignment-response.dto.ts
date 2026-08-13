@@ -9,20 +9,23 @@ export class StudentAssignmentResponseDto {
   id: string;
 
   @Expose()
+  studentId: string;
+
+  @Expose()
   title: string;
 
   @Expose()
   description?: string;
 
   @Expose()
-  start_date: Date;
+  startDate: Date;
 
   @Expose()
-  end_date: Date;
+  endDate: Date;
 
   @Exclude()
-  created_at: Date;
+  createdAt: Date;
 
   @Exclude()
-  updated_at: Date;
+  updatedAt: Date;
 }

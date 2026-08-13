@@ -10,7 +10,7 @@ describe('StudentResponseMapper', () => {
       firstName: 'Test',
       lastName: 'Student',
       dateOfBirth: new Date('2000-01-01'),
-      userId: null,
+      ownerUserId: '6d88f936-dd07-420b-ae65-e33e302d7041',
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),

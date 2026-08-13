@@ -60,16 +60,16 @@ export class UsersService {
   }
 
   findOneByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: {
-        email,
-      },
-    });
+    return this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    await this.findOne(id);
-    await this.userRepository.update(id, updateUserDto);
-    return (await this.userRepository.findOneBy({ id })) as User;
+    const user = await this.findOne(id);
+    Object.assign(user, updateUserDto);
+    return this.userRepository.save(user);
   }
 }
