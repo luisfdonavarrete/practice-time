@@ -9,6 +9,11 @@ import {
   StudentUser,
   StudentUserRelationship,
 } from './entities/student-user.entity';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import {
+  STUDENT_RELATIONSHIP_PERMISSIONS,
+  StudentAction,
+} from './policies/student-access.permissions';
 
 @Injectable()
 export class StudentsService {
@@ -46,7 +51,14 @@ export class StudentsService {
     const queryBuilder = this.studentRepository
       .createQueryBuilder('student')
       .innerJoin('student.userAccesses', 'studentUser')
-      .where('studentUser.user_id = :userId', { userId: user.userId });
+      .where('studentUser.user_id = :userId', { userId: user.userId })
+      .andWhere('studentUser.revoked_at IS NULL')
+      .andWhere('student.is_active = true')
+      .andWhere('studentUser.relationship IN (:...relationships)', {
+        relationships: [
+          ...STUDENT_RELATIONSHIP_PERMISSIONS[StudentAction.View],
+        ],
+      });
 
     return paginate(query, queryBuilder, {
       sortableColumns: ['id'],
@@ -55,5 +67,18 @@ export class StudentsService {
       searchableColumns: ['firstName'],
       // select: ['id', 'name', 'color', 'age', 'lastVetVisit'],
     });
+  }
+
+  findOne(id: string): Promise<Student> {
+    return this.studentRepository.findOneOrFail({ where: { id } });
+  }
+
+  async update(
+    id: string,
+    updateStudentDto: UpdateStudentDto,
+  ): Promise<Student> {
+    const student = await this.findOne(id);
+    Object.assign(student, updateStudentDto);
+    return this.studentRepository.save(student);
   }
 }

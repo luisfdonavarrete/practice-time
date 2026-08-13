@@ -3,8 +3,6 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UserResponseMapper } from '../users/mappers/user-response.mapper';
 import { User } from '../users/entities/user.entity';
-import { SignUpDto } from './dto/sign-up.dto';
-import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 
 describe('AuthController', () => {
@@ -48,7 +46,7 @@ describe('AuthController', () => {
       email: user.email,
       password: 'StrongPassword1!',
       dateOfBirth: user.dateOfBirth,
-    } as SignUpDto;
+    };
     authService.signUp.mockResolvedValue(user);
 
     const result = await controller.signup(signUpDto);
@@ -67,7 +65,7 @@ describe('AuthController', () => {
     const loginDto = {
       email: user.email,
       password: 'StrongPassword1!',
-    } as LoginDto;
+    };
     authService.signIn.mockResolvedValue('signed-token');
 
     const result = await controller.signIn(loginDto);

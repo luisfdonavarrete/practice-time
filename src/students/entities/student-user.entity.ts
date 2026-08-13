@@ -31,6 +31,9 @@ export class StudentUser {
   @Column({ type: 'enum', enum: StudentUserRelationship })
   relationship: StudentUserRelationship;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  revokedAt: Date | null;
+
   @ManyToOne(() => Student, (student) => student.userAccesses, {
     onDelete: 'CASCADE',
   })

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { StudentUser } from './entities/student-user.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 @Injectable()
 export class StudentUserService {
@@ -10,12 +10,18 @@ export class StudentUserService {
     private readonly studentUserRepository: Repository<StudentUser>,
   ) {}
 
-  findOne(studentId: string, userId: string): Promise<StudentUser | null> {
+  findActiveAccess(
+    studentId: string,
+    userId: string,
+  ): Promise<StudentUser | null> {
     return this.studentUserRepository.findOne({
       where: {
         studentId,
         userId,
+        revokedAt: IsNull(),
+        student: { isActive: true },
       },
+      relations: { student: true },
     });
   }
 }

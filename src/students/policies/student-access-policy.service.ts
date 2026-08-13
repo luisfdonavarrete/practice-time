@@ -1,12 +1,18 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { StudentUserService } from '../student-user.service';
+import {
+  STUDENT_RELATIONSHIP_PERMISSIONS,
+  StudentAction,
+} from './student-access.permissions';
 
-export enum StudentAction {
-  View = 'View',
-  Manage = 'Manage',
-}
+export { StudentAction } from './student-access.permissions';
 
 export interface StudentAccessPolicy {
+  can(
+    userId: string,
+    action: StudentAction,
+    studentId: string,
+  ): Promise<boolean>;
   canViewStudent(userId: string, studentId: string): Promise<boolean>;
   canManageStudent(userId: string, studentId: string): Promise<boolean>;
   assertCanViewStudent(userId: string, studentId: string): Promise<void>;
@@ -15,20 +21,31 @@ export interface StudentAccessPolicy {
 @Injectable()
 export class StudentAccessPolicyService implements StudentAccessPolicy {
   constructor(private readonly studentUserService: StudentUserService) {}
-  async canViewStudent(userId: string, studentId: string): Promise<boolean> {
-    const studentUser = await this.studentUserService.findOne(
+
+  async can(
+    userId: string,
+    action: StudentAction,
+    studentId: string,
+  ): Promise<boolean> {
+    const studentUser = await this.studentUserService.findActiveAccess(
       studentId,
       userId,
     );
-    return !!studentUser;
-  }
-  async canManageStudent(userId: string, studentId: string): Promise<boolean> {
-    const studentUser = await this.studentUserService.findOne(
-      studentId,
-      userId,
+    if (!studentUser) return false;
+
+    return STUDENT_RELATIONSHIP_PERMISSIONS[action].has(
+      studentUser.relationship,
     );
-    return !!studentUser;
   }
+
+  canViewStudent(userId: string, studentId: string): Promise<boolean> {
+    return this.can(userId, StudentAction.View, studentId);
+  }
+
+  canManageStudent(userId: string, studentId: string): Promise<boolean> {
+    return this.can(userId, StudentAction.Manage, studentId);
+  }
+
   async assertCanViewStudent(userId: string, studentId: string): Promise<void> {
     const canView = await this.canViewStudent(userId, studentId);
     if (!canView) {
@@ -39,8 +56,8 @@ export class StudentAccessPolicyService implements StudentAccessPolicy {
     userId: string,
     studentId: string,
   ): Promise<void> {
-    const canView = await this.canManageStudent(userId, studentId);
-    if (!canView) {
+    const canManage = await this.canManageStudent(userId, studentId);
+    if (!canManage) {
       throw new ForbiddenException();
     }
   }

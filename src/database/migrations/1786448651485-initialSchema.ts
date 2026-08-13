@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class InitialSchema1786448651485 implements MigrationInterface {
-    name = 'InitialSchema1786448651485'
+  name = 'InitialSchema1786448651485';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "student_assignments" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "title" character varying NOT NULL,
@@ -16,7 +16,7 @@ export class InitialSchema1786448651485 implements MigrationInterface {
                 CONSTRAINT "PK_68bdf53d58e2ff92668cd2f7037" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "student" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "user_id" uuid,
@@ -29,7 +29,7 @@ export class InitialSchema1786448651485 implements MigrationInterface {
                 CONSTRAINT "PK_3d8016e1cb58429474a3c041904" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "users" (
                 "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
                 "email" character varying(255) NOT NULL,
@@ -44,7 +44,7 @@ export class InitialSchema1786448651485 implements MigrationInterface {
                 CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "student_users" (
                 "student_id" uuid NOT NULL,
                 "user_id" uuid NOT NULL,
@@ -53,41 +53,40 @@ export class InitialSchema1786448651485 implements MigrationInterface {
                 CONSTRAINT "PK_d4690688b6fb68294ddfa5b7bc3" PRIMARY KEY ("student_id", "user_id")
             )
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE INDEX "IDX_student_users_user_id" ON "student_users" ("user_id")
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "student_users"
             ADD CONSTRAINT "FK_5cf595c59756fd1dc04923aea77" FOREIGN KEY ("student_id") REFERENCES "student"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "student_users"
             ADD CONSTRAINT "FK_cea314fab249527ae89e9469548" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             ALTER TABLE "student_users" DROP CONSTRAINT "FK_cea314fab249527ae89e9469548"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             ALTER TABLE "student_users" DROP CONSTRAINT "FK_5cf595c59756fd1dc04923aea77"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP INDEX "public"."IDX_student_users_user_id"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "student_users"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "users"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "student"
         `);
-        await queryRunner.query(`
+    await queryRunner.query(`
             DROP TABLE "student_assignments"
         `);
-    }
-
+  }
 }
