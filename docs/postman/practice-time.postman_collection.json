@@ -435,6 +435,13 @@
           }
         },
         {
+          "name": "Get assignment practice summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/student-assignments/{{assignmentId}}/practice-summary"
+          }
+        },
+        {
           "name": "Delete session",
           "request": {
             "method": "DELETE",

@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exception.filter';
 import { AssignmentResourcesModule } from './assignment-resources/assignment-resources.module';
 import { PracticeSessionsModule } from './practice-sessions/practice-sessions.module';
+import { PracticeProgressModule } from './practice-progress/practice-progress.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PracticeSessionsModule } from './practice-sessions/practice-sessions.mo
     AuthModule,
     AssignmentResourcesModule,
     PracticeSessionsModule,
+    PracticeProgressModule,
   ],
   controllers: [AppController],
   providers: [
