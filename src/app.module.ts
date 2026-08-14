@@ -13,6 +13,7 @@ import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exceptio
 import { AssignmentResourcesModule } from './assignment-resources/assignment-resources.module';
 import { PracticeSessionsModule } from './practice-sessions/practice-sessions.module';
 import { PracticeProgressModule } from './practice-progress/practice-progress.module';
+import { AchievementsModule } from './achievements/achievements.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PracticeProgressModule } from './practice-progress/practice-progress.mo
     AssignmentResourcesModule,
     PracticeSessionsModule,
     PracticeProgressModule,
+    AchievementsModule,
   ],
   controllers: [AppController],
   providers: [
