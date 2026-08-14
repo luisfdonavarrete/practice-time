@@ -1,5 +1,6 @@
 import {
   Column,
+  Check,
   CreateDateColumn,
   Entity,
   JoinColumn,
@@ -10,6 +11,10 @@ import {
 import { User } from '../../users/entities/user.entity';
 
 @Entity()
+@Check(
+  'CHK_student_iana_time_zone',
+  `time_zone = 'UTC' OR time_zone LIKE '%/%'`,
+)
 export class Student {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -32,6 +37,9 @@ export class Student {
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ type: 'varchar', length: 255, default: 'UTC' })
+  timeZone: string;
 
   @CreateDateColumn()
   createdAt: Date;

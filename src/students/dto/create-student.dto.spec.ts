@@ -13,6 +13,7 @@ describe('CreateStudentDto', () => {
 
     await expect(validate(dto)).resolves.toHaveLength(0);
     expect(dto).toMatchObject({ firstName: 'Ada', lastName: 'Lovelace' });
+    expect(dto.timeZone).toBe('UTC');
     expect(dto.dateOfBirth).toBeInstanceOf(Date);
   });
 
@@ -20,6 +21,7 @@ describe('CreateStudentDto', () => {
     ['blank first name', { firstName: '   ' }],
     ['oversized first name', { firstName: 'a'.repeat(256) }],
     ['invalid date of birth', { dateOfBirth: 'not-a-date' }],
+    ['invalid time zone', { timeZone: 'America/Not_A_Zone' }],
   ])('rejects %s', async (_caseName, override) => {
     const dto = plainToInstance(CreateStudentDto, {
       firstName: 'Ada',

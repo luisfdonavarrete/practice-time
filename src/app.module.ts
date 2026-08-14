@@ -11,6 +11,7 @@ import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found
 import { AuthModule } from './auth/auth.module';
 import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exception.filter';
 import { AssignmentResourcesModule } from './assignment-resources/assignment-resources.module';
+import { PracticeSessionsModule } from './practice-sessions/practice-sessions.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AssignmentResourcesModule } from './assignment-resources/assignment-res
     UsersModule,
     AuthModule,
     AssignmentResourcesModule,
+    PracticeSessionsModule,
   ],
   controllers: [AppController],
   providers: [

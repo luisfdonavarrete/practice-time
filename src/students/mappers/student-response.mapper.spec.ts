@@ -14,6 +14,7 @@ describe('StudentResponseMapper', () => {
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      timeZone: 'America/Toronto',
     });
     const paginated = {
       data: [student],
@@ -38,6 +39,7 @@ describe('StudentResponseMapper', () => {
       firstName: student.firstName,
       lastName: student.lastName,
       dateOfBirth: student.dateOfBirth,
+      timeZone: student.timeZone,
     });
     expect(result.meta).toBe(paginated.meta);
     expect(result.links).toBe(paginated.links);

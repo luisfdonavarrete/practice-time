@@ -13,4 +13,7 @@ export class StudentDto {
 
   @Expose()
   dateOfBirth: Date;
+
+  @Expose()
+  timeZone: string;
 }
