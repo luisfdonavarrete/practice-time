@@ -23,9 +23,9 @@ const validAssignment = () => ({
           position: 0,
           resources: [
             {
-              kind: AssignmentResourceKind.UPLOAD,
+              kind: AssignmentResourceKind.EXTERNAL_LINK,
               displayName: 'Sheet music',
-              assetKey: 'assignments/amazing-grace.pdf',
+              url: 'https://example.com/amazing-grace.pdf',
               position: 0,
             },
             {
@@ -66,9 +66,9 @@ describe('CreateStudentAssignmentDto', () => {
     const item = payload.sections[0].items[0];
     item.suggestedPracticeDays = 8;
     item.resources[0] = {
-      kind: AssignmentResourceKind.UPLOAD,
-      displayName: 'Invalid upload',
-      assetKey: '',
+      kind: AssignmentResourceKind.EXTERNAL_LINK,
+      displayName: 'Invalid link',
+      url: 'http://example.com/unsafe',
       position: 0,
     };
 

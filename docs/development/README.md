@@ -8,7 +8,7 @@ product, architecture, live demo, and portfolio case study.
 
 - Node.js and npm
 - NestJS 11 with TypeScript
-- PostgreSQL
+- PostgreSQL and private S3-compatible object storage
 - TypeORM with versioned migrations
 - Jest and Supertest
 
@@ -52,11 +52,15 @@ database values are required. Environment files are loaded in this order:
 1. `.env.<NODE_ENV>`
 2. `.env`
 
-Start PostgreSQL and wait for its health check to pass:
+Start PostgreSQL and LocalStack and wait for their health checks to pass:
 
 ```bash
-docker compose up -d --wait postgres
+docker compose up -d --wait postgres localstack
 ```
+
+LocalStack initializes a private `practice-time-resources` S3 bucket. Uploaded
+PDF, MP3, JPEG, PNG, GIF, and WebP files are stored there; PostgreSQL stores
+only validated metadata and ownership-scoped references.
 
 Apply the database migrations:
 
@@ -81,7 +85,7 @@ At the start of a development session:
 
 ```bash
 # Start PostgreSQL and wait until it is ready
-docker compose up -d --wait postgres
+docker compose up -d --wait postgres localstack
 
 # Apply migrations added since the last local run
 npm run migration:run
@@ -172,6 +176,49 @@ npm run migration:run
 
 `docker compose down --volumes` permanently deletes the local database stored
 in this Compose project. Do not use it when the data must be preserved.
+
+## Assignment resource storage
+
+For host-based development, use the LocalStack defaults from `.env.example`:
+
+```dotenv
+S3_REGION=us-east-1
+S3_BUCKET=practice-time-resources
+S3_ENDPOINT=http://localhost:4566
+S3_PUBLIC_ENDPOINT=http://localhost:4566
+S3_ACCESS_KEY_ID=test
+S3_SECRET_ACCESS_KEY=test
+S3_FORCE_PATH_STYLE=true
+S3_SIGNED_URL_TTL_SECONDS=300
+RESOURCE_MAX_UPLOAD_BYTES=15728640
+```
+
+Start and inspect local object storage with:
+
+```bash
+docker compose up -d --wait localstack
+docker compose exec localstack awslocal s3api head-bucket \
+  --bucket practice-time-resources
+```
+
+Production should use a private S3 bucket, HTTPS, short-lived signed URLs, and
+an IAM role restricted to that bucket. Set `S3_ENDPOINT` to the production
+S3-compatible endpoint or omit it for AWS S3, set `S3_FORCE_PATH_STYLE=false`,
+and provide credentials through the deployment platform or workload identity.
+`S3_PUBLIC_ENDPOINT` controls the host embedded in signed URLs and can be
+omitted when it is the same as `S3_ENDPOINT`. Never put production access keys
+in an environment file or repository.
+
+Resource endpoints are ownership-scoped:
+
+- `POST /student-assignment-items/:itemId/resources/upload` uses multipart
+  fields `file`, `displayName`, and `position`.
+- `POST /student-assignment-items/:itemId/resources/links` creates an HTTPS
+  external or YouTube resource.
+- `GET /student-assignment-items/:itemId/resources` lists safe metadata.
+- `GET /assignment-resources/:resourceId/access-url` issues a short-lived URL.
+- `DELETE /assignment-resources/:resourceId` removes a reference and deletes
+  the object only after its final reference is removed.
 
 ## Common commands
 

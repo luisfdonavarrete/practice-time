@@ -20,9 +20,6 @@ export function HasValidResourceSource(validationOptions?: ValidationOptions) {
             assetKey?: unknown;
             url?: unknown;
           };
-          const hasAssetKey =
-            typeof resource.assetKey === 'string' &&
-            resource.assetKey.trim().length > 0;
           const hasHttpsUrl =
             typeof resource.url === 'string' &&
             isURL(resource.url, {
@@ -31,11 +28,11 @@ export function HasValidResourceSource(validationOptions?: ValidationOptions) {
             });
 
           return resource.kind === AssignmentResourceKind.UPLOAD
-            ? hasAssetKey && resource.url === undefined
-            : !hasAssetKey && hasHttpsUrl;
+            ? false
+            : resource.assetKey === undefined && hasHttpsUrl;
         },
         defaultMessage(): string {
-          return 'upload resources require only assetKey; link resources require only an HTTPS url';
+          return 'uploaded files must use the upload endpoint; link resources require an HTTPS url';
         },
       },
     });

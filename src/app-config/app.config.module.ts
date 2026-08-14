@@ -3,6 +3,7 @@ import { DatabaseConfigService } from './database.config.service';
 import { AppConfigService } from './app.config.service';
 import { ConfigModule } from '@nestjs/config';
 import { configSchema } from './config.schema';
+import { ObjectStorageConfigService } from './object-storage.config.service';
 
 @Module({
   imports: [
@@ -22,7 +23,15 @@ import { configSchema } from './config.schema';
       },
     }),
   ],
-  providers: [DatabaseConfigService, AppConfigService],
-  exports: [DatabaseConfigService, AppConfigService],
+  providers: [
+    DatabaseConfigService,
+    AppConfigService,
+    ObjectStorageConfigService,
+  ],
+  exports: [
+    DatabaseConfigService,
+    AppConfigService,
+    ObjectStorageConfigService,
+  ],
 })
 export class AppConfigModule {}

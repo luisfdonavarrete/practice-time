@@ -3,6 +3,10 @@ import { AssignmentResourceKind } from '../entities/assignment-item-resource.ent
 
 @Exclude()
 export class AssignmentResourceResponseDto {
+  constructor(partial: Partial<AssignmentResourceResponseDto>) {
+    Object.assign(this, partial);
+  }
+
   @Expose()
   id: string;
 
@@ -13,7 +17,16 @@ export class AssignmentResourceResponseDto {
   displayName: string;
 
   @Expose()
-  assetKey: string | null;
+  originalFilename: string | null;
+
+  @Expose()
+  mimeType: string | null;
+
+  @Expose()
+  byteSize: number | null;
+
+  @Expose()
+  isActive: boolean;
 
   @Expose()
   url: string | null;

@@ -10,6 +10,7 @@ import { DuplicateEmailExceptionFilter } from './users/filters/duplicate-email-e
 import { EntityNotFoundExceptionFilter } from './common/filters/entity-not-found-exception.filter';
 import { AuthModule } from './auth/auth.module';
 import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exception.filter';
+import { AssignmentResourcesModule } from './assignment-resources/assignment-resources.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { LoginFailedExceptionFilter } from './auth/filters/login-failed.exceptio
     StudentsModule,
     UsersModule,
     AuthModule,
+    AssignmentResourcesModule,
   ],
   controllers: [AppController],
   providers: [

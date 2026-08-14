@@ -3,31 +3,27 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
-  IsOptional,
   IsString,
   MaxLength,
   Min,
 } from 'class-validator';
 import { NormalizeString } from '../../common/decorators/normalize-string.decorator';
-import { AssignmentResourceKind } from '../entities/assignment-item-resource.entity';
-import { HasValidResourceSource } from './validators/has-valid-resource-source.decorator';
+import { AssignmentResourceKind } from '../../student-assignments/entities/assignment-item-resource.entity';
 
-export class CreateAssignmentResourceDto {
+export class CreateLinkResourceDto {
   @IsEnum(AssignmentResourceKind)
   @IsIn([AssignmentResourceKind.EXTERNAL_LINK, AssignmentResourceKind.YOUTUBE])
-  @HasValidResourceSource()
-  kind: AssignmentResourceKind;
+  kind: AssignmentResourceKind.EXTERNAL_LINK | AssignmentResourceKind.YOUTUBE;
 
   @NormalizeString({ trim: true })
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(255)
   displayName: string;
 
-  @IsOptional()
   @IsString()
   @MaxLength(2048)
-  url?: string;
+  url: string;
 
   @IsInt()
   @Min(0)

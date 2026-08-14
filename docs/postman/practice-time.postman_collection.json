@@ -43,6 +43,14 @@
     {
       "key": "assignmentId",
       "value": ""
+    },
+    {
+      "key": "assignmentItemId",
+      "value": ""
+    },
+    {
+      "key": "resourceId",
+      "value": ""
     }
   ],
   "item": [
@@ -165,6 +173,7 @@
         {
           "name": "Create student",
           "request": {
+            "description": "In Body > form-data, select an actual local file for the file row. Do not manually set Content-Type; Postman adds the multipart boundary.",
             "method": "POST",
             "header": [
               {
@@ -305,7 +314,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"startDate\": \"2026-06-15\",\n  \"endDate\": \"2026-06-21\",\n  \"notices\": [\n    {\n      \"title\": \"Year End Recital\",\n      \"occursAt\": \"2026-06-22T22:45:00.000Z\",\n      \"location\": \"Room 213\",\n      \"position\": 0\n    }\n  ],\n  \"sections\": [\n    {\n      \"title\": \"Repertoire\",\n      \"position\": 0,\n      \"items\": [\n        {\n          \"title\": \"Amazing Grace\",\n          \"instructions\": \"Practice the whole song, memorized.\",\n          \"completionMode\": \"practice_days\",\n          \"suggestedPracticeDays\": 5,\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"upload\",\n              \"displayName\": \"Sheet music\",\n              \"assetKey\": \"assignments/amazing-grace.pdf\",\n              \"position\": 0\n            },\n            {\n              \"kind\": \"youtube\",\n              \"displayName\": \"Performance guide\",\n              \"url\": \"https://www.youtube.com/watch?v=example\",\n              \"position\": 1\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"title\": \"Written Theory\",\n      \"position\": 1,\n      \"items\": [\n        {\n          \"title\": \"JR3 Unit 4 Test\",\n          \"completionMode\": \"one_time\",\n          \"dueAt\": \"2026-06-20T13:00:00.000Z\",\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"external_link\",\n              \"displayName\": \"Open test\",\n              \"url\": \"https://example.com/jr3-unit-4\",\n              \"position\": 0\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"startDate\": \"2026-06-15\",\n  \"endDate\": \"2026-06-21\",\n  \"notices\": [\n    {\n      \"title\": \"Year End Recital\",\n      \"occursAt\": \"2026-06-22T22:45:00.000Z\",\n      \"location\": \"Room 213\",\n      \"position\": 0\n    }\n  ],\n  \"sections\": [\n    {\n      \"title\": \"Repertoire\",\n      \"position\": 0,\n      \"items\": [\n        {\n          \"title\": \"Amazing Grace\",\n          \"instructions\": \"Practice the whole song, memorized.\",\n          \"completionMode\": \"practice_days\",\n          \"suggestedPracticeDays\": 5,\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"youtube\",\n              \"displayName\": \"Performance guide\",\n              \"url\": \"https://www.youtube.com/watch?v=example\",\n              \"position\": 1\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"title\": \"Written Theory\",\n      \"position\": 1,\n      \"items\": [\n        {\n          \"title\": \"JR3 Unit 4 Test\",\n          \"completionMode\": \"one_time\",\n          \"dueAt\": \"2026-06-20T13:00:00.000Z\",\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"external_link\",\n              \"displayName\": \"Open test\",\n              \"url\": \"https://example.com/jr3-unit-4\",\n              \"position\": 0\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/student-assignments"
           },
@@ -318,6 +327,7 @@
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "  const body = pm.response.json();",
                   "  if (body.data && body.data.id) pm.collectionVariables.set('assignmentId', body.data.id);",
+                  "  if (body.data && body.data.sections && body.data.sections[0]) pm.collectionVariables.set('assignmentItemId', body.data.sections[0].items[0].id);",
                   "}"
                 ]
               }
@@ -360,6 +370,78 @@
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/student-assignments/{{assignmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assignment resources",
+      "description": "Ownership-scoped private uploads, HTTPS links, metadata, signed reads, and removal.",
+      "item": [
+        {
+          "name": "Upload private file",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                {
+                  "key": "displayName",
+                  "value": "Sheet music",
+                  "type": "text"
+                },
+                { "key": "position", "value": "0", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/student-assignment-items/{{assignmentItemId}}/resources/upload"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.data && body.data.id) pm.collectionVariables.set('resourceId', body.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create external link",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"external_link\",\n  \"displayName\": \"Theory test\",\n  \"url\": \"https://example.com/theory-test#instructions\",\n  \"position\": 2\n}"
+            },
+            "url": "{{baseUrl}}/student-assignment-items/{{assignmentItemId}}/resources/links"
+          }
+        },
+        {
+          "name": "List item resources",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/student-assignment-items/{{assignmentItemId}}/resources"
+          }
+        },
+        {
+          "name": "Get signed file URL",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/assignment-resources/{{resourceId}}/access-url"
+          }
+        },
+        {
+          "name": "Delete resource",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/assignment-resources/{{resourceId}}"
           }
         }
       ]

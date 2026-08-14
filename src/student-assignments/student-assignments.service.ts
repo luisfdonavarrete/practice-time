@@ -67,7 +67,12 @@ export class StudentAssignmentsService {
                   manager.getRepository(AssignmentItemResource).create({
                     kind: resource.kind,
                     displayName: resource.displayName,
-                    assetKey: resource.assetKey ?? null,
+                    assetKey: null,
+                    originalFilename: null,
+                    mimeType: null,
+                    byteSize: null,
+                    sha256: null,
+                    isActive: true,
                     url: resource.url ?? null,
                     position: resource.position,
                   }),
@@ -136,7 +141,11 @@ export class StudentAssignmentsService {
       .leftJoinAndSelect('assignment.notices', 'notice')
       .leftJoinAndSelect('assignment.sections', 'section')
       .leftJoinAndSelect('section.items', 'item')
-      .leftJoinAndSelect('item.resources', 'resource')
+      .leftJoinAndSelect(
+        'item.resources',
+        'resource',
+        'resource.is_active = true',
+      )
       .where('student.owner_user_id = :ownerUserId', { ownerUserId });
   }
 }
