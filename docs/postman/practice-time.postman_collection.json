@@ -199,12 +199,8 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/students?page=1&limit=20",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "students"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["students"],
               "query": [
                 {
                   "key": "page",
@@ -309,7 +305,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"startDate\": \"2026-08-17T00:00:00.000Z\",\n  \"endDate\": \"2026-08-23T23:59:59.000Z\"\n}"
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"title\": \"Recital practice week\",\n  \"description\": \"Practice Amazing Grace and complete written theory.\",\n  \"startDate\": \"2026-06-15\",\n  \"endDate\": \"2026-06-21\",\n  \"notices\": [\n    {\n      \"title\": \"Year End Recital\",\n      \"occursAt\": \"2026-06-22T22:45:00.000Z\",\n      \"location\": \"Room 213\",\n      \"position\": 0\n    }\n  ],\n  \"sections\": [\n    {\n      \"title\": \"Repertoire\",\n      \"position\": 0,\n      \"items\": [\n        {\n          \"title\": \"Amazing Grace\",\n          \"instructions\": \"Practice the whole song, memorized.\",\n          \"completionMode\": \"practice_days\",\n          \"suggestedPracticeDays\": 5,\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"upload\",\n              \"displayName\": \"Sheet music\",\n              \"assetKey\": \"assignments/amazing-grace.pdf\",\n              \"position\": 0\n            },\n            {\n              \"kind\": \"youtube\",\n              \"displayName\": \"Performance guide\",\n              \"url\": \"https://www.youtube.com/watch?v=example\",\n              \"position\": 1\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"title\": \"Written Theory\",\n      \"position\": 1,\n      \"items\": [\n        {\n          \"title\": \"JR3 Unit 4 Test\",\n          \"completionMode\": \"one_time\",\n          \"dueAt\": \"2026-06-20T13:00:00.000Z\",\n          \"position\": 0,\n          \"resources\": [\n            {\n              \"kind\": \"external_link\",\n              \"displayName\": \"Open test\",\n              \"url\": \"https://example.com/jr3-unit-4\",\n              \"position\": 0\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
             },
             "url": "{{baseUrl}}/student-assignments"
           },

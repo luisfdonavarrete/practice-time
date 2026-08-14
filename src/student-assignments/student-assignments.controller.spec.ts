@@ -1,6 +1,7 @@
 import { StudentAssignmentsController } from './student-assignments.controller';
 import { StudentAssignmentsService } from './student-assignments.service';
 import { StudentAssignment } from './entities/student-assignment.entity';
+import { AssignmentCompletionMode } from './entities/student-assignment-item.entity';
 
 describe('StudentAssignmentsController', () => {
   const user = { userId: 'user-id', email: 'owner@example.com' };
@@ -34,8 +35,24 @@ describe('StudentAssignmentsController', () => {
     const dto = {
       studentId: assignment.studentId,
       title: assignment.title,
-      startDate: new Date('2026-08-17'),
-      endDate: new Date('2026-08-23'),
+      startDate: '2026-08-17',
+      endDate: '2026-08-23',
+      notices: [],
+      sections: [
+        {
+          title: 'Repertoire',
+          position: 0,
+          items: [
+            {
+              title: 'Amazing Grace',
+              completionMode: AssignmentCompletionMode.PRACTICE_DAYS,
+              suggestedPracticeDays: 5,
+              position: 0,
+              resources: [],
+            },
+          ],
+        },
+      ],
     };
     service.create.mockResolvedValue(assignment);
 

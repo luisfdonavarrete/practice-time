@@ -1,5 +1,10 @@
 import { Exclude, Expose } from 'class-transformer';
+import { Type } from 'class-transformer';
+import { StudentAssignmentStatus } from '../entities/student-assignment.entity';
+import { AssignmentNoticeResponseDto } from './assignment-notice-response.dto';
+import { AssignmentSectionResponseDto } from './assignment-section-response.dto';
 
+@Exclude()
 export class StudentAssignmentResponseDto {
   constructor(partial: Partial<StudentAssignmentResponseDto>) {
     Object.assign(this, partial);
@@ -18,14 +23,25 @@ export class StudentAssignmentResponseDto {
   description?: string;
 
   @Expose()
-  startDate: Date;
+  startDate: string;
 
   @Expose()
-  endDate: Date;
+  endDate: string;
 
-  @Exclude()
-  createdAt: Date;
+  @Expose()
+  status: StudentAssignmentStatus;
 
-  @Exclude()
-  updatedAt: Date;
+  @Expose()
+  publishedAt: Date | null;
+
+  @Expose()
+  archivedAt: Date | null;
+
+  @Expose()
+  @Type(() => AssignmentNoticeResponseDto)
+  notices: AssignmentNoticeResponseDto[];
+
+  @Expose()
+  @Type(() => AssignmentSectionResponseDto)
+  sections: AssignmentSectionResponseDto[];
 }
