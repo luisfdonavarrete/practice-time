@@ -76,6 +76,9 @@ export class PracticeSession {
   @Column({ type: 'varchar', length: 255 })
   timeZoneSnapshot: string;
 
+  @Column({ type: 'text', nullable: true })
+  note: string | null;
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

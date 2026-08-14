@@ -51,6 +51,10 @@
     {
       "key": "resourceId",
       "value": ""
+    },
+    {
+      "key": "practiceSessionId",
+      "value": ""
     }
   ],
   "item": [
@@ -370,6 +374,71 @@
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/student-assignments/{{assignmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Practice sessions",
+      "description": "Create, filter, correct, and delete free or assignment-item practice for owned students.",
+      "item": [
+        {
+          "name": "Create item-linked session",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"assignmentItemId\": \"{{assignmentItemId}}\",\n  \"durationSeconds\": 900,\n  \"practicedAt\": \"2026-08-13T18:00:00.000Z\",\n  \"note\": \"Scales and recital repertoire\"\n}"
+            },
+            "url": "{{baseUrl}}/practice-sessions"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "  const body = pm.response.json();",
+                  "  if (body.data && body.data.id) pm.collectionVariables.set('practiceSessionId', body.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List filtered sessions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/practice-sessions?studentId={{studentId}}&assignmentItemId={{assignmentItemId}}&practiceLocalDate=2026-08-13&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get session",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/practice-sessions/{{practiceSessionId}}"
+          }
+        },
+        {
+          "name": "Correct session",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"durationSeconds\": 1200,\n  \"note\": \"Corrected duration\"\n}"
+            },
+            "url": "{{baseUrl}}/practice-sessions/{{practiceSessionId}}"
+          }
+        },
+        {
+          "name": "Delete session",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/practice-sessions/{{practiceSessionId}}"
           }
         }
       ]
