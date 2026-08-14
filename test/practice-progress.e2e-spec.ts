@@ -1,8 +1,12 @@
 import dataSource from '../src/database/data-source';
 import { PracticeProgressService } from '../src/practice-progress/practice-progress.service';
+import { NotFoundException } from '@nestjs/common';
+import { AssignmentItemCompletionsService } from '../src/achievements/assignment-item-completions.service';
+import { AssignmentProgressEvents } from '../src/achievements/assignment-progress.events';
 
 describe('Practice progress PostgreSQL queries', () => {
   let service: PracticeProgressService;
+  let completionsService: AssignmentItemCompletionsService;
   let userId: string;
   let studentId: string;
   let assignmentId: string;
@@ -14,6 +18,10 @@ describe('Practice progress PostgreSQL queries', () => {
   beforeAll(async () => {
     await dataSource.initialize();
     service = new PracticeProgressService(dataSource);
+    completionsService = new AssignmentItemCompletionsService(
+      dataSource,
+      new AssignmentProgressEvents(),
+    );
   });
 
   afterAll(async () => {
@@ -138,6 +146,125 @@ describe('Practice progress PostgreSQL queries', () => {
     expect(summary.xp).toBe(20);
   });
 
+  it('hides progress from unrelated users and for inactive or cancelled records', async () => {
+    await expect(
+      service.getAssignmentSummary(crypto.randomUUID(), assignmentId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    await dataSource.query(
+      `UPDATE student SET is_active = false WHERE id = $1`,
+      [studentId],
+    );
+    await expect(
+      service.getAssignmentSummary(userId, assignmentId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    await dataSource.query(
+      `UPDATE student SET is_active = true WHERE id = $1`,
+      [studentId],
+    );
+    await dataSource.query(
+      `UPDATE student_assignments SET status = 'cancelled' WHERE id = $1`,
+      [assignmentId],
+    );
+    await expect(
+      service.getAssignmentSummary(userId, assignmentId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('removes one-time progress when a completed task is reopened', async () => {
+    await dataSource.query(
+      `INSERT INTO assignment_item_completions
+       (item_id, student_id, completed_by_user_id)
+       VALUES ($1, $2, $3)`,
+      [oneTimeItemId, studentId, userId],
+    );
+    expect(
+      (await service.getAssignmentSummary(userId, assignmentId)).items[1],
+    ).toMatchObject({
+      current: 1,
+      completed: true,
+    });
+
+    await dataSource.query(
+      `UPDATE assignment_item_completions SET reopened_at = CURRENT_TIMESTAMP
+       WHERE item_id = $1 AND reopened_at IS NULL`,
+      [oneTimeItemId],
+    );
+    expect(
+      (await service.getAssignmentSummary(userId, assignmentId)).items[1],
+    ).toMatchObject({
+      current: 0,
+      completed: false,
+    });
+  });
+
+  it.each([
+    [
+      'midnight across a negative UTC offset',
+      '2026-01-01T04:30:00.000Z',
+      'America/Toronto',
+      '2025-12-31',
+    ],
+    [
+      'DST spring transition',
+      '2026-03-08T07:30:00.000Z',
+      'America/Toronto',
+      '2026-03-08',
+    ],
+    [
+      'positive UTC offset',
+      '2025-12-31T23:30:00.000Z',
+      'Pacific/Auckland',
+      '2026-01-01',
+    ],
+  ])(
+    'derives the local calendar date at %s',
+    async (_case, instant, zone, expectedDate) => {
+      await dataSource.query(
+        `UPDATE student SET time_zone = $2 WHERE id = $1`,
+        [studentId, zone],
+      );
+      const result: unknown = await dataSource.query(
+        `INSERT INTO practice_sessions
+       (student_id, recorded_by_user_id, duration_seconds, practiced_at,
+        practice_local_date, time_zone_snapshot)
+       VALUES ($1, $2, 60, $3, CURRENT_DATE, 'UTC')
+       RETURNING practice_local_date::text AS "localDate", time_zone_snapshot AS "snapshot"`,
+        [studentId, userId, instant],
+      );
+      expect(result).toEqual([{ localDate: expectedDate, snapshot: zone }]);
+    },
+  );
+
+  it('preserves the original calendar snapshot after the student changes time zone', async () => {
+    const result: unknown = await dataSource.query(
+      `INSERT INTO practice_sessions
+       (student_id, recorded_by_user_id, duration_seconds, practiced_at,
+        practice_local_date, time_zone_snapshot)
+       VALUES ($1, $2, 60, '2025-12-31T23:30:00Z', CURRENT_DATE, 'UTC')
+       RETURNING id, practice_local_date::text AS "localDate", time_zone_snapshot AS snapshot`,
+      [studentId, userId],
+    );
+    const [session] = result as Array<{
+      id: string;
+      localDate: string;
+      snapshot: string;
+    }>;
+    await dataSource.query(
+      `UPDATE student SET time_zone = 'Pacific/Auckland' WHERE id = $1`,
+      [studentId],
+    );
+    const stored: unknown = await dataSource.query(
+      `SELECT practice_local_date::text AS "localDate", time_zone_snapshot AS snapshot
+       FROM practice_sessions WHERE id = $1`,
+      [session.id],
+    );
+    expect(stored).toEqual([
+      { localDate: session.localDate, snapshot: session.snapshot },
+    ]);
+  });
+
   it('awards daily XP once under concurrent duplicate writes', async () => {
     await dataSource.query(
       `DELETE FROM daily_practice_xp_awards WHERE student_id = $1`,
@@ -161,5 +288,21 @@ describe('Practice progress PostgreSQL queries', () => {
     );
     const [{ count, xp }] = xpResult as Array<{ count: number; xp: number }>;
     expect({ count, xp }).toEqual({ count: 1, xp: 10 });
+  });
+
+  it('creates one active item completion under concurrent retries', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        completionsService.complete(userId, oneTimeItemId),
+      ),
+    );
+    expect(new Set(results.map((completion) => completion.id)).size).toBe(1);
+
+    const countResult: unknown = await dataSource.query(
+      `SELECT COUNT(*)::int AS count FROM assignment_item_completions
+       WHERE item_id = $1 AND reopened_at IS NULL`,
+      [oneTimeItemId],
+    );
+    expect(countResult).toEqual([{ count: 1 }]);
   });
 });

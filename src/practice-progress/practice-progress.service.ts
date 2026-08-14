@@ -27,7 +27,10 @@ export class PracticeProgressService {
                 student.time_zone AS "timeZone"
          FROM student_assignments assignment
          JOIN student ON student.id = assignment.student_id
-         WHERE assignment.id = $1 AND student.owner_user_id = $2`,
+         WHERE assignment.id = $1
+           AND student.owner_user_id = $2
+           AND student.is_active = true
+           AND assignment.status <> 'cancelled'`,
         [assignmentId, ownerUserId],
       );
       const [assignment] = assignmentResult as OwnedAssignmentRow[];
