@@ -35,6 +35,18 @@ export function App({ appStore = store }: AppProps) {
                   path="progress"
                   element={<PlaceholderPage title="Progress" />}
                 />
+                <Route
+                  path="students/new"
+                  element={<PlaceholderPage title="Add student" />}
+                />
+                <Route
+                  path="assignments/new"
+                  element={<PlaceholderPage title="Create assignment" />}
+                />
+                <Route
+                  path="assignments/:assignmentId/duplicate"
+                  element={<PlaceholderPage title="Duplicate assignment" />}
+                />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

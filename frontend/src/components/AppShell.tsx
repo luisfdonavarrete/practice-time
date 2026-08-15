@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
 import { useLogout } from '../features/auth/use-logout';
+import { StudentSelector } from './StudentSelector';
+import { UploadStatus } from './UploadStatus';
 
 const navigation = [
   { to: '/', label: 'This week', end: true },
@@ -22,6 +24,7 @@ export function AppShell() {
           </span>
           <span>Practice Time</span>
         </NavLink>
+        <StudentSelector />
         <div className="account-menu">
           <span>{currentUser?.firstName}</span>
           <button type="button" onClick={logout}>
@@ -48,6 +51,7 @@ export function AppShell() {
       <main className="app-content" id="main-content">
         <Outlet />
       </main>
+      <UploadStatus />
     </div>
   );
 }
