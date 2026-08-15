@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAppSelector } from '../app/hooks';
+import { useLogout } from '../features/auth/use-logout';
 
 const navigation = [
   { to: '/', label: 'This week', end: true },
@@ -8,6 +10,9 @@ const navigation = [
 ] as const;
 
 export function AppShell() {
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const logout = useLogout();
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -17,7 +22,12 @@ export function AppShell() {
           </span>
           <span>Practice Time</span>
         </NavLink>
-        <span className="student-context">No student selected</span>
+        <div className="account-menu">
+          <span>{currentUser?.firstName}</span>
+          <button type="button" onClick={logout}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <aside className="app-sidebar" aria-label="Primary navigation">

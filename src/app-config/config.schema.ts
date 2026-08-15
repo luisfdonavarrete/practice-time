@@ -6,6 +6,7 @@ export const configSchema = z
       .enum(['development', 'production', 'test'])
       .default('development'),
     PORT: z.coerce.number().int().positive().default(3000),
+    FRONTEND_ORIGIN: z.url().default('http://localhost:5173'),
     JWT_SECRET: z.string().min(32),
     JWT_EXPIRES: z.string().regex(/^\d+(ms|s|m|h|d|w)$/),
 

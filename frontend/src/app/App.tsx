@@ -4,29 +4,42 @@ import { store } from './store';
 import { AppShell } from '../components/AppShell';
 import { DashboardPage } from '../pages/DashboardPage';
 import { PlaceholderPage } from '../pages/PlaceholderPage';
+import { LoginPage } from '../pages/LoginPage';
+import { ProtectedRoute } from '../features/auth/ProtectedRoute';
+import { SessionBoundary } from '../features/auth/SessionBoundary';
+import type { AppStore } from './store';
 
-export function App() {
+interface AppProps {
+  appStore?: AppStore;
+}
+
+export function App({ appStore = store }: AppProps) {
   return (
-    <Provider store={store}>
+    <Provider store={appStore}>
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route
-              path="students"
-              element={<PlaceholderPage title="Students" />}
-            />
-            <Route
-              path="practice"
-              element={<PlaceholderPage title="Practice" />}
-            />
-            <Route
-              path="progress"
-              element={<PlaceholderPage title="Progress" />}
-            />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <SessionBoundary>
+          <Routes>
+            <Route path="login" element={<LoginPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppShell />}>
+                <Route index element={<DashboardPage />} />
+                <Route
+                  path="students"
+                  element={<PlaceholderPage title="Students" />}
+                />
+                <Route
+                  path="practice"
+                  element={<PlaceholderPage title="Practice" />}
+                />
+                <Route
+                  path="progress"
+                  element={<PlaceholderPage title="Progress" />}
+                />
+              </Route>
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </SessionBoundary>
       </BrowserRouter>
     </Provider>
   );

@@ -13,6 +13,10 @@ export class AppConfigService {
     return +this.configService.get<number>('PORT')!;
   }
 
+  get frontendOrigin(): string {
+    return this.configService.get<string>('FRONTEND_ORIGIN')!;
+  }
+
   get jwtSecret(): string {
     return this.configService.get<string>('JWT_SECRET')!;
   }

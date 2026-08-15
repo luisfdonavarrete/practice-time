@@ -68,9 +68,25 @@ a {
   font-size: 1.35rem;
 }
 
-.student-context {
+.account-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   color: #dce7df;
   font-size: 0.9rem;
+}
+
+.account-menu button {
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgb(255 255 255 / 35%);
+  border-radius: 0.55rem;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.account-menu button:hover {
+  background: rgb(255 255 255 / 10%);
 }
 
 .app-sidebar {
@@ -159,6 +175,158 @@ h1 {
   color: #657068;
 }
 
+.session-loading {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  justify-items: center;
+  color: #405248;
+  background: #f4f1e8;
+}
+
+.loading-note {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #223d32;
+  background: #f3c969;
+  font-size: 1.6rem;
+}
+
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.9fr);
+  background: #f4f1e8;
+}
+
+.login-introduction,
+.login-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 7vw, 7rem);
+}
+
+.login-introduction {
+  color: #f7f2e7;
+  background:
+    radial-gradient(circle at 20% 10%, rgb(243 201 105 / 24%), transparent 35%),
+    #223d32;
+}
+
+.login-introduction .eyebrow {
+  margin-top: clamp(4rem, 12vh, 8rem);
+  color: #f3c969;
+}
+
+.login-introduction h1 {
+  color: #fffdf6;
+}
+
+.login-introduction > p:last-child {
+  max-width: 38rem;
+  color: #dce7df;
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 800;
+}
+
+.login-panel {
+  background: #fffdf7;
+}
+
+.login-panel form {
+  width: min(26rem, 100%);
+  margin: 0 auto;
+}
+
+.login-panel h2 {
+  margin: 0;
+  color: #1d332a;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.25rem;
+}
+
+.form-help {
+  margin: 0.5rem 0 2rem;
+  color: #657068;
+}
+
+.login-panel label {
+  display: block;
+  margin: 1.15rem 0 0.45rem;
+  color: #33473e;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.login-panel input {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #aeb7b0;
+  border-radius: 0.55rem;
+  color: #202421;
+  background: #fff;
+  font: inherit;
+}
+
+.login-panel input:focus {
+  border-color: #2f6851;
+  outline: 3px solid rgb(47 104 81 / 18%);
+}
+
+.login-panel input[aria-invalid='true'] {
+  border-color: #a63d37;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.4rem;
+  color: #9a302b;
+  font-size: 0.85rem;
+}
+
+.form-alert {
+  margin: 1.25rem 0;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid #a63d37;
+  border-radius: 0.35rem;
+  color: #762a26;
+  background: #fbecea;
+}
+
+.primary-button {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 1.75rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: #fff;
+  background: #2a604b;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #214d3c;
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 @media (max-width: 700px) {
   .app-shell {
     grid-template: 4rem 1fr auto / 1fr;
@@ -172,7 +340,7 @@ h1 {
     padding: 0 1rem;
   }
 
-  .student-context {
+  .account-menu span {
     max-width: 9rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -197,6 +365,20 @@ h1 {
     padding: 0.65rem 0.25rem;
     font-size: 0.78rem;
     text-align: center;
+  }
+}
+
+@media (max-width: 800px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-introduction {
+    min-height: 40vh;
+  }
+
+  .login-introduction .eyebrow {
+    margin-top: 3rem;
   }
 }
 
