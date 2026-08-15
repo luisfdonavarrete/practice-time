@@ -79,4 +79,17 @@ describe('StudentAssignmentsController', () => {
     expect(service.findOne).toHaveBeenCalledWith(user.userId, assignment.id);
     expect(service.remove).toHaveBeenCalledWith(user.userId, assignment.id);
   });
+
+  it('updates a draft through the authenticated owner', async () => {
+    const dto = { title: 'Updated practice week' };
+    service.update.mockResolvedValue(assignment);
+
+    await controller.update(assignment.id, dto, user);
+
+    expect(service.update).toHaveBeenCalledWith(
+      assignment.id,
+      user.userId,
+      dto,
+    );
+  });
 });

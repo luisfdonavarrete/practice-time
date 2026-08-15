@@ -40,11 +40,15 @@ export function App({ appStore = store }: AppProps) {
                 />
                 <Route
                   path="assignments/new"
-                  element={<AssignmentAuthoringPage />}
+                  element={<AssignmentAuthoringPage mode="create" />}
                 />
                 <Route
                   path="assignments/:assignmentId/duplicate"
-                  element={<AssignmentAuthoringPage />}
+                  element={<AssignmentAuthoringPage mode="duplicate" />}
+                />
+                <Route
+                  path="assignments/:assignmentId/edit"
+                  element={<AssignmentAuthoringPage mode="edit" />}
                 />
               </Route>
             </Route>

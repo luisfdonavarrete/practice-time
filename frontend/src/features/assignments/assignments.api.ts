@@ -5,6 +5,7 @@ import type {
   CreateStudentAssignment,
   PracticeSummary,
   StudentAssignment,
+  UpdateStudentAssignment,
 } from './assignments.types';
 
 export const assignmentsApi = api.injectEndpoints({
@@ -31,6 +32,23 @@ export const assignmentsApi = api.injectEndpoints({
       transformResponse: (response: ApiEnvelope<StudentAssignment>) =>
         response.data,
       invalidatesTags: ['Assignments'],
+    }),
+    updateAssignment: builder.mutation<
+      StudentAssignment,
+      { assignmentId: string; assignment: UpdateStudentAssignment }
+    >({
+      query: ({ assignmentId, assignment }) => ({
+        url: `/student-assignments/${assignmentId}`,
+        method: 'PATCH',
+        body: assignment,
+      }),
+      transformResponse: (response: ApiEnvelope<StudentAssignment>) =>
+        response.data,
+      invalidatesTags: (_result, _error, { assignmentId }) => [
+        'Assignments',
+        { type: 'Assignments', id: assignmentId },
+        { type: 'Progress', id: assignmentId },
+      ],
     }),
     publishAssignment: builder.mutation<StudentAssignment, string>({
       query: (assignmentId) => ({
@@ -133,6 +151,7 @@ export const {
   useGetAssignmentsQuery,
   useGetAssignmentQuery,
   useCreateAssignmentMutation,
+  useUpdateAssignmentMutation,
   usePublishAssignmentMutation,
   useGetPracticeSummaryQuery,
   useGetAchievementsQuery,

@@ -116,3 +116,27 @@ export interface CreateStudentAssignment {
     }>;
   }>;
 }
+
+export interface UpdateStudentAssignment extends Omit<
+  CreateStudentAssignment,
+  'studentId' | 'sections'
+> {
+  sections: Array<{
+    title: string;
+    position: number;
+    items: Array<{
+      title: string;
+      instructions?: string;
+      completionMode: 'practice_days' | 'one_time';
+      suggestedPracticeDays?: number;
+      dueAt?: string;
+      position: number;
+      resources: CreateAssignmentResource[];
+      retainedUploads: Array<{
+        id: string;
+        displayName: string;
+        position: number;
+      }>;
+    }>;
+  }>;
+}

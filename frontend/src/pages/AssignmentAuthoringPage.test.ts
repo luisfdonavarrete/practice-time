@@ -90,4 +90,61 @@ describe('assignment authoring model', () => {
     expect(duplicate.sections[0].items[0].resources).toHaveLength(1);
     expect(duplicate.sections[0].items[0].resources[0].kind).toBe('youtube');
   });
+
+  it('edits a draft while retaining existing uploads in the update request', () => {
+    const source = {
+      id: 'assignment-id',
+      studentId: 'student-id',
+      title: 'Recital week',
+      description: 'Prepare the recital song.',
+      startDate: '2026-06-15',
+      endDate: '2026-06-21',
+      status: 'draft',
+      notices: [],
+      sections: [
+        {
+          id: 'section-id',
+          title: 'Repertoire',
+          position: 0,
+          items: [
+            {
+              id: 'item-id',
+              title: 'Amazing Grace',
+              instructions: null,
+              completionMode: 'practice_days',
+              suggestedPracticeDays: 5,
+              dueAt: null,
+              position: 0,
+              resources: [
+                {
+                  id: '10d99bb3-a33d-409a-ae97-72b57bfae1d0',
+                  kind: 'upload',
+                  displayName: 'Score',
+                  originalFilename: 'score.pdf',
+                  mimeType: 'application/pdf',
+                  byteSize: 100,
+                  url: null,
+                  position: 0,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    } satisfies StudentAssignment;
+
+    const draft = assignmentDraftTestSupport.editDraft(source);
+    draft.title = 'Updated recital week';
+    const request = assignmentDraftTestSupport.toUpdateRequest(draft);
+
+    expect(request.title).toBe('Updated recital week');
+    expect(request.sections[0].items[0].retainedUploads).toEqual([
+      {
+        id: '10d99bb3-a33d-409a-ae97-72b57bfae1d0',
+        displayName: 'Score',
+        position: 0,
+      },
+    ]);
+    expect(request.sections[0].items[0].resources).toEqual([]);
+  });
 });

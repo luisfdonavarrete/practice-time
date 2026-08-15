@@ -6,10 +6,12 @@ import {
   useCreateAssignmentMutation,
   useGetAssignmentQuery,
   usePublishAssignmentMutation,
+  useUpdateAssignmentMutation,
 } from '../features/assignments/assignments.api';
 import type {
   CreateStudentAssignment,
   StudentAssignment,
+  UpdateStudentAssignment,
 } from '../features/assignments/assignments.types';
 import { authStorage } from '../features/auth/auth-storage';
 import { isFetchBaseQueryError } from '../features/auth/is-fetch-base-query-error';
@@ -26,10 +28,12 @@ type ResourceKind = 'external_link' | 'youtube' | 'upload';
 
 interface ResourceDraft {
   localId: string;
+  existingId?: string;
   kind: ResourceKind;
   displayName: string;
   url: string;
   file: File | null;
+  originalFilename?: string;
 }
 
 interface ItemDraft {
@@ -74,22 +78,50 @@ const ACCEPTED_UPLOAD_TYPES = [
   'image/webp',
 ];
 
-export function AssignmentAuthoringPage() {
+type AuthoringMode = 'create' | 'duplicate' | 'edit';
+
+export function AssignmentAuthoringPage({
+  mode = 'create',
+}: {
+  mode?: AuthoringMode;
+}) {
   const { assignmentId } = useParams();
   const sourceQuery = useGetAssignmentQuery(assignmentId ?? '', {
-    skip: !assignmentId,
+    skip: mode === 'create' || !assignmentId,
   });
 
   if (sourceQuery.isLoading) {
-    return <main className="authoring-loading">Preparing a clean copy…</main>;
+    return (
+      <main className="authoring-loading">
+        {mode === 'edit'
+          ? 'Opening assignment draft…'
+          : 'Preparing a clean copy…'}
+      </main>
+    );
   }
 
   if (sourceQuery.isError) {
     return (
       <section className="dashboard-message">
         <p className="eyebrow">Assignment unavailable</p>
-        <h1>This week could not be duplicated.</h1>
+        <h1>
+          This assignment could not be{' '}
+          {mode === 'edit' ? 'edited' : 'duplicated'}.
+        </h1>
         <p>The assignment may no longer be available to this account.</p>
+        <Link className="secondary-link" to="/">
+          Return to dashboard
+        </Link>
+      </section>
+    );
+  }
+
+  if (mode === 'edit' && sourceQuery.data?.status !== 'draft') {
+    return (
+      <section className="dashboard-message">
+        <p className="eyebrow">Published assignment</p>
+        <h1>Only drafts can be edited.</h1>
+        <p>Duplicate this assignment to make a new editable practice week.</p>
         <Link className="secondary-link" to="/">
           Return to dashboard
         </Link>
@@ -102,6 +134,7 @@ export function AssignmentAuthoringPage() {
       key={assignmentId ?? 'new-assignment'}
       assignmentId={assignmentId}
       source={sourceQuery.data}
+      mode={mode}
     />
   );
 }
@@ -109,9 +142,11 @@ export function AssignmentAuthoringPage() {
 function AssignmentAuthoringForm({
   assignmentId,
   source,
+  mode,
 }: {
   assignmentId?: string;
   source?: StudentAssignment;
+  mode: AuthoringMode;
 }) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -120,9 +155,14 @@ function AssignmentAuthoringForm({
   );
   const studentsQuery = useGetStudentsQuery();
   const [createAssignment, createState] = useCreateAssignmentMutation();
+  const [updateAssignment, updateState] = useUpdateAssignmentMutation();
   const [publishAssignment, publishState] = usePublishAssignmentMutation();
   const [draft, setDraft] = useState<AssignmentDraft>(() =>
-    source ? duplicateDraft(source) : emptyDraft(selectedStudentId ?? ''),
+    source
+      ? mode === 'edit'
+        ? editDraft(source)
+        : duplicateDraft(source)
+      : emptyDraft(selectedStudentId ?? ''),
   );
   const [errors, setErrors] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -144,15 +184,21 @@ function AssignmentAuthoringForm({
 
     setPendingPublish(publish);
     try {
-      const created = await createAssignment(toCreateRequest(draft)).unwrap();
-      setSavedAssignment(created);
+      const saved =
+        mode === 'edit' && assignmentId
+          ? await updateAssignment({
+              assignmentId,
+              assignment: toUpdateRequest(draft),
+            }).unwrap()
+          : await createAssignment(toCreateRequest(draft)).unwrap();
+      setSavedAssignment(saved);
       await uploadDraftFiles(
         draft,
-        created,
+        saved,
         dispatch,
         uploadedResourceIds.current,
       );
-      if (publish) await publishAssignment(created.id).unwrap();
+      if (publish) await publishAssignment(saved.id).unwrap();
       dispatch(uploadStatusCleared());
       navigate('/', { replace: true });
     } catch (error) {
@@ -178,19 +224,26 @@ function AssignmentAuthoringForm({
     }
   }
 
-  const busy = createState.isLoading || publishState.isLoading;
+  const busy =
+    createState.isLoading || updateState.isLoading || publishState.isLoading;
 
   return (
     <section className="authoring-page" aria-labelledby="authoring-title">
       <header className="authoring-heading">
         <div>
           <p className="eyebrow">
-            {assignmentId ? 'Duplicate week' : 'Assignment builder'}
+            {mode === 'edit'
+              ? 'Edit draft'
+              : mode === 'duplicate'
+                ? 'Duplicate week'
+                : 'Assignment builder'}
           </p>
           <h1 id="authoring-title">
-            {assignmentId
-              ? 'Shape the next practice week.'
-              : 'Plan a focused practice week.'}
+            {mode === 'edit'
+              ? 'Refine this practice week.'
+              : mode === 'duplicate'
+                ? 'Shape the next practice week.'
+                : 'Plan a focused practice week.'}
           </h1>
           <p>
             Draft changes stay on this page until the complete assignment is
@@ -202,7 +255,7 @@ function AssignmentAuthoringForm({
         </Link>
       </header>
 
-      {assignmentId && (
+      {mode === 'duplicate' && (
         <div className="authoring-note" role="note">
           Content and link resources were copied. Practice sessions,
           completions, achievements, and uploaded files were intentionally
@@ -244,7 +297,7 @@ function AssignmentAuthoringForm({
                 Student
                 <select
                   value={draft.studentId}
-                  disabled={Boolean(assignmentId)}
+                  disabled={mode !== 'create'}
                   onChange={(event) =>
                     setDraft({ ...draft, studentId: event.target.value })
                   }
@@ -389,7 +442,7 @@ function AssignmentAuthoringForm({
             disabled={busy || Boolean(savedAssignment)}
             onClick={() => void save(false)}
           >
-            {createState.isLoading && !pendingPublish
+            {(createState.isLoading || updateState.isLoading) && !pendingPublish
               ? 'Saving…'
               : 'Save draft'}
           </button>
@@ -749,21 +802,27 @@ function ResourceEditor({
             }
           />
           {resource.kind === 'upload' ? (
-            <input
-              aria-label={`Resource ${index + 1} file`}
-              type="file"
-              accept=".pdf,.mp3,.jpg,.jpeg,.png,.webp"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                onChange(
-                  replaceAt(resources, index, {
-                    ...resource,
-                    file,
-                    displayName: resource.displayName || file?.name || '',
-                  }),
-                );
-              }}
-            />
+            <div className="existing-upload">
+              {resource.existingId && !resource.file && (
+                <span>Current file: {resource.originalFilename}</span>
+              )}
+              <input
+                aria-label={`Resource ${index + 1} file`}
+                type="file"
+                accept=".pdf,.mp3,.jpg,.jpeg,.png,.webp"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  onChange(
+                    replaceAt(resources, index, {
+                      ...resource,
+                      existingId: file ? undefined : resource.existingId,
+                      file,
+                      displayName: resource.displayName || file?.name || '',
+                    }),
+                  );
+                }}
+              />
+            </div>
           ) : (
             <input
               aria-label={`Resource ${index + 1} URL`}
@@ -880,6 +939,43 @@ function duplicateDraft(source: StudentAssignment): AssignmentDraft {
   };
 }
 
+function editDraft(source: StudentAssignment): AssignmentDraft {
+  return {
+    studentId: source.studentId,
+    title: source.title,
+    description: source.description ?? '',
+    startDate: source.startDate,
+    notices: source.notices.map((notice) => ({
+      localId: notice.id,
+      title: notice.title,
+      occursAt: notice.occursAt ? toDateTimeLocal(notice.occursAt) : '',
+      location: notice.location ?? '',
+      details: notice.details ?? '',
+    })),
+    sections: source.sections.map((section) => ({
+      localId: section.id,
+      title: section.title,
+      items: section.items.map((item) => ({
+        localId: item.id,
+        title: item.title,
+        instructions: item.instructions ?? '',
+        completionMode: item.completionMode,
+        suggestedPracticeDays: item.suggestedPracticeDays ?? 1,
+        dueAt: item.dueAt ? item.dueAt.slice(0, 10) : '',
+        resources: item.resources.map((resource) => ({
+          localId: resource.id,
+          existingId: resource.kind === 'upload' ? resource.id : undefined,
+          kind: resource.kind,
+          displayName: resource.displayName,
+          url: resource.url ?? '',
+          file: null,
+          originalFilename: resource.originalFilename ?? undefined,
+        })),
+      })),
+    })),
+  };
+}
+
 function newNotice(): NoticeDraft {
   return {
     localId: crypto.randomUUID(),
@@ -942,15 +1038,18 @@ function validateDraft(draft: AssignmentDraft): string[] {
             `${prefix}, resource ${resourceIndex + 1} needs a display name.`,
           );
         if (resource.kind === 'upload') {
-          if (!resource.file)
+          if (!resource.file && !resource.existingId)
             errors.push(
               `${prefix}, resource ${resourceIndex + 1} needs a file.`,
             );
-          else if (!ACCEPTED_UPLOAD_TYPES.includes(resource.file.type))
+          else if (
+            resource.file &&
+            !ACCEPTED_UPLOAD_TYPES.includes(resource.file.type)
+          )
             errors.push(
               `${resource.file.name} is not a supported PDF, MP3, or image.`,
             );
-          else if (resource.file.size > MAX_UPLOAD_BYTES)
+          else if (resource.file && resource.file.size > MAX_UPLOAD_BYTES)
             errors.push(`${resource.file.name} is larger than 15 MB.`);
         } else if (!isHttpsUrl(resource.url))
           errors.push(
@@ -1008,6 +1107,36 @@ function toCreateRequest(draft: AssignmentDraft): CreateStudentAssignment {
                   position: resourcePosition,
                 },
               ],
+        ),
+      })),
+    })),
+  };
+}
+
+function toUpdateRequest(draft: AssignmentDraft): UpdateStudentAssignment {
+  const request = toCreateRequest(draft);
+  return {
+    title: request.title,
+    description: draft.description.trim(),
+    startDate: request.startDate,
+    endDate: request.endDate,
+    notices: request.notices,
+    sections: request.sections.map((section, sectionIndex) => ({
+      ...section,
+      items: section.items.map((item, itemIndex) => ({
+        ...item,
+        retainedUploads: draft.sections[sectionIndex].items[
+          itemIndex
+        ].resources.flatMap((resource, position) =>
+          resource.kind === 'upload' && resource.existingId
+            ? [
+                {
+                  id: resource.existingId,
+                  displayName: resource.displayName.trim(),
+                  position,
+                },
+              ]
+            : [],
         ),
       })),
     })),
@@ -1125,6 +1254,12 @@ function localDate(date: Date): string {
   const offset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }
+
+function toDateTimeLocal(value: string): string {
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
     month: 'short',
@@ -1153,7 +1288,9 @@ function isYouTubeUrl(value: string): boolean {
 export const assignmentDraftTestSupport = {
   addDays,
   duplicateDraft,
+  editDraft,
   emptyDraft,
   toCreateRequest,
+  toUpdateRequest,
   validateDraft,
 };

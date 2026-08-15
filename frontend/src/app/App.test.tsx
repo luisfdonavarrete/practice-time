@@ -189,6 +189,16 @@ describe('authentication flow', () => {
                         position: 0,
                         resources: [],
                       },
+                      {
+                        id: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
+                        title: 'Written theory test',
+                        instructions: 'Complete the online test.',
+                        completionMode: 'one_time',
+                        suggestedPracticeDays: null,
+                        dueAt: '2099-12-30T12:00:00.000Z',
+                        position: 1,
+                        resources: [],
+                      },
                     ],
                   },
                 ],
@@ -220,6 +230,16 @@ describe('authentication flow', () => {
                   current: 3,
                   completed: false,
                 },
+                {
+                  itemId: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
+                  sectionId: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
+                  sectionTitle: 'Repertoire',
+                  title: 'Written theory test',
+                  mode: 'one_time',
+                  target: 1,
+                  current: 1,
+                  completed: true,
+                },
               ],
             },
           });
@@ -246,7 +266,13 @@ describe('authentication flow', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Year End Recital')).toBeInTheDocument();
     expect(screen.getByText('Amazing Grace')).toBeInTheDocument();
-    expect(await screen.findByLabelText('3 of 5 complete')).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText('3 of 5 practice days complete'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Written theory test')).toBeInTheDocument();
+    expect(screen.getByText('1 of 2 goals complete (50%)')).toBeInTheDocument();
+    expect(screen.getByText('Total XP')).toBeInTheDocument();
+    expect(screen.getByText('Unlocked Aug 15, 2026')).toBeInTheDocument();
     expect(await screen.findByText('Practice Spark')).toBeInTheDocument();
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(

@@ -13,6 +13,8 @@ import type {
 import { isFetchBaseQueryError } from '../features/auth/is-fetch-base-query-error';
 import { useOnlineStatus } from '../features/network/use-online-status';
 import { useGetStudentsQuery } from '../features/students/students.api';
+import { useAchievementSocket } from '../features/achievements/use-achievement-socket';
+import { AchievementToast } from '../components/AchievementToast';
 
 export function DashboardPage() {
   const online = useOnlineStatus();
@@ -44,6 +46,8 @@ export function DashboardPage() {
   const achievementsQuery = useGetAchievementsQuery(selectedStudentId ?? '', {
     skip: !selectedStudentId,
   });
+  const { achievement: unlockedAchievement, dismiss: dismissAchievement } =
+    useAchievementSocket(selectedStudentId, currentAssignment?.id ?? null);
 
   if (!online) {
     return (
@@ -158,12 +162,21 @@ export function DashboardPage() {
           <p>{currentAssignment.title}</p>
         </div>
         <div className="button-row dashboard-actions">
-          <Link
-            className="primary-link"
-            to={`/practice?assignment=${currentAssignment.id}`}
-          >
-            Continue practice
-          </Link>
+          {currentAssignment.status === 'draft' ? (
+            <Link
+              className="primary-link"
+              to={`/assignments/${currentAssignment.id}/edit`}
+            >
+              Edit draft
+            </Link>
+          ) : (
+            <Link
+              className="primary-link"
+              to={`/practice?assignment=${currentAssignment.id}`}
+            >
+              Continue practice
+            </Link>
+          )}
           <Link
             className="secondary-link"
             to={`/assignments/${currentAssignment.id}/duplicate`}
@@ -192,10 +205,7 @@ export function DashboardPage() {
       )}
 
       <section className="metric-grid" aria-label="Weekly progress overview">
-        <Metric
-          label="XP earned"
-          value={progress ? String(progress.xp) : '—'}
-        />
+        <Metric label="Total XP" value={progress ? String(progress.xp) : '—'} />
         <Metric
           label="Current streak"
           value={progress ? `${progress.currentStreak} days` : '—'}
@@ -208,7 +218,24 @@ export function DashboardPage() {
           label="Weekly minutes"
           value={progress ? String(progress.weeklyMinutes) : '—'}
         />
+        <Metric
+          label="Assignment"
+          value={
+            progress
+              ? progress.assignmentCompleted
+                ? 'Complete'
+                : 'In progress'
+              : '—'
+          }
+        />
       </section>
+
+      {progress && (
+        <AssignmentProgress
+          completed={progress.items.filter((item) => item.completed).length}
+          total={progress.items.length}
+        />
+      )}
 
       {progressQuery.isError ? (
         <InlineStatus>
@@ -225,10 +252,17 @@ export function DashboardPage() {
               <p className="eyebrow">Assignment</p>
               <h2 id="items-title">This week’s goals</h2>
             </div>
-            <Link className="text-link" to="/progress">
-              View all progress
-            </Link>
+            <span className="completion-label">
+              {progress?.assignmentCompleted
+                ? 'All goals complete'
+                : 'Keep going'}
+            </span>
           </div>
+          {currentAssignment.sections.length === 0 && (
+            <InlineStatus>
+              This assignment does not have any goals yet.
+            </InlineStatus>
+          )}
           {currentAssignment.sections.map((section) => (
             <div className="assignment-section" key={section.id}>
               <h3>{section.title}</h3>
@@ -237,6 +271,7 @@ export function DashboardPage() {
                   key={item.id}
                   title={item.title}
                   dueAt={item.dueAt}
+                  mode={item.completionMode}
                   progress={progress?.items.find(
                     (entry) => entry.itemId === item.id,
                   )}
@@ -258,21 +293,30 @@ export function DashboardPage() {
             <p>Complete the first practice session to unlock a badge.</p>
           )}
           <ul className="achievement-list">
-            {achievements
-              .slice(-3)
-              .reverse()
+            {[...achievements]
+              .sort((a, b) => b.unlockedAt.localeCompare(a.unlockedAt))
               .map((achievement) => (
                 <li key={achievement.id}>
                   <span aria-hidden="true">★</span>
                   <div>
                     <strong>{achievement.title}</strong>
                     <p>{achievement.description}</p>
+                    <time dateTime={achievement.unlockedAt}>
+                      Unlocked {formatAchievementDate(achievement.unlockedAt)}
+                    </time>
                   </div>
                 </li>
               ))}
           </ul>
         </aside>
       </div>
+
+      {unlockedAchievement && (
+        <AchievementToast
+          achievement={unlockedAchievement}
+          onDismiss={dismissAchievement}
+        />
+      )}
     </section>
   );
 }
@@ -289,38 +333,82 @@ function Metric({ label, value }: { label: string; value: string }) {
 function ItemTarget({
   title,
   dueAt,
+  mode,
   progress,
   target,
 }: {
   title: string;
   dueAt: string | null;
+  mode: 'practice_days' | 'one_time';
   progress?: PracticeItemProgress;
   target: number;
 }) {
   const current = progress?.current ?? 0;
   const total = progress?.target ?? target;
+  const complete = progress?.completed ?? false;
   return (
     <article className="item-target">
       <div>
         <strong>{title}</strong>
-        <span>{dueAt ? `Due ${formatDate(dueAt)}` : 'Practice this week'}</span>
+        <span>
+          {dueAt
+            ? `Due ${formatDate(dueAt)}`
+            : mode === 'one_time'
+              ? 'No due date'
+              : 'Practice this week'}
+        </span>
       </div>
-      <div
-        className="target-progress"
-        aria-label={`${current} of ${total} complete`}
-      >
-        {Array.from({ length: total }, (_, index) => (
-          <span
-            key={index}
-            className={index < current ? 'complete' : undefined}
-            aria-hidden="true"
-          />
-        ))}
-        <b>
-          {current}/{total}
-        </b>
-      </div>
+      {mode === 'one_time' ? (
+        <span className={`one-time-state${complete ? ' complete' : ''}`}>
+          <span aria-hidden="true">{complete ? '✓' : '○'}</span>
+          {complete ? 'Complete' : 'Not complete'}
+        </span>
+      ) : (
+        <div
+          className="target-progress"
+          aria-label={`${current} of ${total} practice days complete`}
+        >
+          {Array.from({ length: total }, (_, index) => (
+            <span
+              key={index}
+              className={index < current ? 'complete' : undefined}
+              aria-hidden="true"
+            />
+          ))}
+          <b>
+            {current}/{total}
+          </b>
+        </div>
+      )}
     </article>
+  );
+}
+
+function AssignmentProgress({
+  completed,
+  total,
+}: {
+  completed: number;
+  total: number;
+}) {
+  const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+  return (
+    <section
+      className="assignment-progress"
+      aria-labelledby="assignment-progress-title"
+    >
+      <div>
+        <strong id="assignment-progress-title">
+          Weekly assignment completion
+        </strong>
+        <span>
+          {completed} of {total} goals complete ({percentage}%)
+        </span>
+      </div>
+      <progress value={completed} max={Math.max(total, 1)}>
+        {percentage}%
+      </progress>
+    </section>
   );
 }
 
@@ -431,4 +519,12 @@ function formatNotice(
   return (
     [date, location].filter(Boolean).join(' · ') || 'Details in the assignment'
   );
+}
+
+function formatAchievementDate(value: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
 }

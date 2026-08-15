@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Metronome } from '../components/Metronome';
 import { ResourceViewer } from '../components/ResourceViewer';
+import { AchievementToast } from '../components/AchievementToast';
 import { useAppSelector } from '../app/hooks';
 import {
   useCompleteAssignmentItemMutation,
@@ -146,24 +147,7 @@ export function PracticePlayerPage() {
       </div>
 
       {achievement && (
-        <aside
-          className="achievement-toast"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <span aria-hidden="true">★</span>
-          <div>
-            <strong>{achievement.title}</strong>
-            <p>{achievement.description}</p>
-          </div>
-          <button
-            type="button"
-            onClick={dismiss}
-            aria-label="Dismiss achievement"
-          >
-            ×
-          </button>
-        </aside>
+        <AchievementToast achievement={achievement} onDismiss={dismiss} />
       )}
     </section>
   );
