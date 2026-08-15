@@ -61,6 +61,71 @@ export const assignmentsApi = api.injectEndpoints({
         { type: 'Achievements', id: studentId },
       ],
     }),
+    getResourceAccess: builder.query<
+      { url: string; expiresInSeconds: number },
+      string
+    >({
+      query: (resourceId) => `/assignment-resources/${resourceId}/access-url`,
+      transformResponse: (
+        response: ApiEnvelope<{ url: string; expiresInSeconds: number }>,
+      ) => response.data,
+    }),
+    createPracticeSession: builder.mutation<
+      { id: string; practiceLocalDate: string },
+      {
+        studentId: string;
+        assignmentItemId: string;
+        durationSeconds: number;
+        practicedAt: string;
+        note?: string;
+        assignmentId: string;
+      }
+    >({
+      query: (request) => ({
+        url: '/practice-sessions',
+        method: 'POST',
+        body: {
+          studentId: request.studentId,
+          assignmentItemId: request.assignmentItemId,
+          durationSeconds: request.durationSeconds,
+          practicedAt: request.practicedAt,
+          ...(request.note ? { note: request.note } : {}),
+        },
+      }),
+      transformResponse: (
+        response: ApiEnvelope<{ id: string; practiceLocalDate: string }>,
+      ) => response.data,
+      invalidatesTags: (_result, _error, request) => [
+        { type: 'Progress', id: request.assignmentId },
+        { type: 'Achievements', id: request.studentId },
+      ],
+    }),
+    completeAssignmentItem: builder.mutation<
+      void,
+      { itemId: string; assignmentId: string; studentId: string }
+    >({
+      query: ({ itemId }) => ({
+        url: `/student-assignment-items/${itemId}/completion`,
+        method: 'PUT',
+      }),
+      invalidatesTags: (_result, _error, request) => [
+        { type: 'Progress', id: request.assignmentId },
+        { type: 'Achievements', id: request.studentId },
+      ],
+    }),
+    reopenAssignmentItem: builder.mutation<
+      void,
+      { itemId: string; assignmentId: string; studentId: string }
+    >({
+      query: ({ itemId }) => ({
+        url: `/student-assignment-items/${itemId}/completion`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, request) => [
+        { type: 'Progress', id: request.assignmentId },
+        { type: 'Achievements', id: request.studentId },
+      ],
+    }),
   }),
 });
 
@@ -71,4 +136,8 @@ export const {
   usePublishAssignmentMutation,
   useGetPracticeSummaryQuery,
   useGetAchievementsQuery,
+  useGetResourceAccessQuery,
+  useCreatePracticeSessionMutation,
+  useCompleteAssignmentItemMutation,
+  useReopenAssignmentItemMutation,
 } = assignmentsApi;

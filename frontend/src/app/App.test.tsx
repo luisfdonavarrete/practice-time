@@ -85,11 +85,13 @@ describe('authentication flow', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 
     expect(
-      await screen.findByRole('heading', { name: 'Practice' }),
+      await screen.findByRole('heading', {
+        name: 'There is no active practice assignment.',
+      }),
     ).toBeInTheDocument();
     expect(authStorage.read()).toBe('new-token');
     expect(window.location.pathname).toBe('/practice');
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
   it('restores a valid user on refresh and sends the bearer token', async () => {
@@ -185,6 +187,7 @@ describe('authentication flow', () => {
                         suggestedPracticeDays: 5,
                         dueAt: null,
                         position: 0,
+                        resources: [],
                       },
                     ],
                   },
@@ -248,6 +251,21 @@ describe('authentication flow', () => {
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: 'Continue practice' }),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole('link', { name: 'Continue practice' }),
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Practice with Mia' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('The whole song, memorized.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: 'Practice timer and metronome' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Start timer' }),
     ).toBeInTheDocument();
   });
 

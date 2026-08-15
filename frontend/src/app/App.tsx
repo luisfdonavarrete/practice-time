@@ -9,6 +9,7 @@ import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { SessionBoundary } from '../features/auth/SessionBoundary';
 import type { AppStore } from './store';
 import { AssignmentAuthoringPage } from '../pages/AssignmentAuthoringPage';
+import { PracticePlayerPage } from '../pages/PracticePlayerPage';
 
 interface AppProps {
   appStore?: AppStore;
@@ -28,10 +29,7 @@ export function App({ appStore = store }: AppProps) {
                   path="students"
                   element={<PlaceholderPage title="Students" />}
                 />
-                <Route
-                  path="practice"
-                  element={<PlaceholderPage title="Practice" />}
-                />
+                <Route path="practice" element={<PracticePlayerPage />} />
                 <Route
                   path="progress"
                   element={<PlaceholderPage title="Progress" />}
