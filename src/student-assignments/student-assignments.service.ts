@@ -5,6 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository, SelectQueryBuilder } from 'typeorm';
+import {
+  FilterOperator,
+  paginate,
+  Paginated,
+  PaginateQuery,
+} from 'nestjs-paginate';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
 import {
@@ -99,14 +105,22 @@ export class StudentAssignmentsService {
     });
   }
 
-  findAll(ownerUserId: string): Promise<StudentAssignment[]> {
-    return this.getOwnedAssignmentQuery(ownerUserId)
-      .orderBy('assignment.created_at', 'DESC')
-      .addOrderBy('notice.position', 'ASC')
-      .addOrderBy('section.position', 'ASC')
-      .addOrderBy('item.position', 'ASC')
-      .addOrderBy('resource.position', 'ASC')
-      .getMany();
+  findAll(
+    query: PaginateQuery,
+    ownerUserId: string,
+  ): Promise<Paginated<StudentAssignment>> {
+    return paginate(query, this.getOwnedAssignmentQuery(ownerUserId), {
+      sortableColumns: ['createdAt', 'startDate', 'endDate', 'title'],
+      defaultSortBy: [['createdAt', 'DESC']],
+      nullSort: 'last',
+      filterableColumns: {
+        studentId: [FilterOperator.EQ],
+        status: [FilterOperator.EQ, FilterOperator.IN],
+        startDate: [FilterOperator.EQ, FilterOperator.GTE, FilterOperator.LTE],
+        endDate: [FilterOperator.EQ, FilterOperator.GTE, FilterOperator.LTE],
+      },
+      relations: [],
+    });
   }
 
   async findOne(ownerUserId: string, id: string): Promise<StudentAssignment> {
@@ -295,6 +309,9 @@ export class StudentAssignmentsService {
 
   async remove(ownerUserId: string, id: string): Promise<void> {
     const assignment = await this.findOne(ownerUserId, id);
+    if (assignment.status !== StudentAssignmentStatus.DRAFT) {
+      throw new BadRequestException('Only draft assignments can be deleted');
+    }
     await this.studentAssignmentRepository.remove(assignment);
   }
 
@@ -305,6 +322,125 @@ export class StudentAssignmentsService {
     }
     assignment.status = StudentAssignmentStatus.PUBLISHED;
     assignment.publishedAt = new Date();
+    await this.studentAssignmentRepository.save(assignment);
+    return this.findOne(ownerUserId, id);
+  }
+
+  async duplicate(
+    ownerUserId: string,
+    id: string,
+    startDate: string,
+  ): Promise<StudentAssignment> {
+    return this.dataSource.transaction(async (manager) => {
+      const assignmentRepository = manager.getRepository(StudentAssignment);
+      const source = await this.getOwnedAssignmentQuery(
+        ownerUserId,
+        assignmentRepository,
+      )
+        .andWhere('assignment.id = :id', { id })
+        .orderBy('notice.position', 'ASC')
+        .addOrderBy('section.position', 'ASC')
+        .addOrderBy('item.position', 'ASC')
+        .addOrderBy('resource.position', 'ASC')
+        .getOne();
+      if (!source) {
+        throw new NotFoundException(
+          `StudentAssignment with ID "${id}" not found`,
+        );
+      }
+      await manager.getRepository(Student).findOneOrFail({
+        where: {
+          id: source.studentId,
+          ownerUserId,
+          isActive: true,
+        },
+      });
+
+      const duplicate = assignmentRepository.create({
+        studentId: source.studentId,
+        creatorUserId: ownerUserId,
+        title: `${source.title} (copy)`,
+        description: source.description,
+        startDate,
+        endDate: addCalendarDays(startDate, 6),
+        status: StudentAssignmentStatus.DRAFT,
+        publishedAt: null,
+        archivedAt: null,
+        notices: source.notices.map((notice) =>
+          manager.getRepository(AssignmentNotice).create({
+            title: notice.title,
+            occursAt: null,
+            location: notice.location,
+            details: notice.details,
+            position: notice.position,
+          }),
+        ),
+        sections: source.sections.map((section) =>
+          manager.getRepository(AssignmentSection).create({
+            title: section.title,
+            position: section.position,
+            items: section.items.map((item) =>
+              manager.getRepository(StudentAssignmentItem).create({
+                title: item.title,
+                instructions: item.instructions,
+                completionMode: item.completionMode,
+                suggestedPracticeDays: item.suggestedPracticeDays,
+                dueAt: null,
+                position: item.position,
+                resources: item.resources.map((resource) =>
+                  manager.getRepository(AssignmentItemResource).create({
+                    kind: resource.kind,
+                    displayName: resource.displayName,
+                    assetKey: resource.assetKey,
+                    originalFilename: resource.originalFilename,
+                    mimeType: resource.mimeType,
+                    byteSize: resource.byteSize,
+                    sha256: resource.sha256,
+                    isActive: resource.isActive,
+                    url: resource.url,
+                    position: resource.position,
+                  }),
+                ),
+              }),
+            ),
+          }),
+        ),
+      });
+      const saved = await assignmentRepository.save(duplicate);
+      return this.getOwnedAssignmentQuery(ownerUserId, assignmentRepository)
+        .andWhere('assignment.id = :id', { id: saved.id })
+        .orderBy('notice.position', 'ASC')
+        .addOrderBy('section.position', 'ASC')
+        .addOrderBy('item.position', 'ASC')
+        .addOrderBy('resource.position', 'ASC')
+        .getOneOrFail();
+    });
+  }
+
+  async archive(ownerUserId: string, id: string): Promise<StudentAssignment> {
+    const assignment = await this.findOne(ownerUserId, id);
+    if (assignment.status !== StudentAssignmentStatus.PUBLISHED) {
+      throw new BadRequestException(
+        'Only published assignments can be archived',
+      );
+    }
+    assignment.status = StudentAssignmentStatus.ARCHIVED;
+    assignment.archivedAt = new Date();
+    await this.studentAssignmentRepository.save(assignment);
+    return this.findOne(ownerUserId, id);
+  }
+
+  async cancel(ownerUserId: string, id: string): Promise<StudentAssignment> {
+    const assignment = await this.findOne(ownerUserId, id);
+    if (
+      assignment.status !== StudentAssignmentStatus.DRAFT &&
+      assignment.status !== StudentAssignmentStatus.PUBLISHED
+    ) {
+      throw new BadRequestException(
+        'Only draft or published assignments can be cancelled',
+      );
+    }
+    assignment.status = StudentAssignmentStatus.CANCELLED;
     await this.studentAssignmentRepository.save(assignment);
     return this.findOne(ownerUserId, id);
   }
@@ -326,4 +462,10 @@ export class StudentAssignmentsService {
       )
       .where('student.owner_user_id = :ownerUserId', { ownerUserId });
   }
+}
+
+function addCalendarDays(value: string, days: number): string {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }

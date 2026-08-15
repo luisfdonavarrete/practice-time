@@ -13,7 +13,15 @@ describe('StudentAssignmentsController', () => {
   let service: jest.Mocked<
     Pick<
       StudentAssignmentsService,
-      'create' | 'findAll' | 'findOne' | 'update' | 'publish' | 'remove'
+      | 'create'
+      | 'findAll'
+      | 'findOne'
+      | 'update'
+      | 'publish'
+      | 'duplicate'
+      | 'archive'
+      | 'cancel'
+      | 'remove'
     >
   >;
   let controller: StudentAssignmentsController;
@@ -25,6 +33,9 @@ describe('StudentAssignmentsController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       publish: jest.fn(),
+      duplicate: jest.fn(),
+      archive: jest.fn(),
+      cancel: jest.fn(),
       remove: jest.fn(),
     };
     controller = new StudentAssignmentsController(
@@ -91,5 +102,27 @@ describe('StudentAssignmentsController', () => {
       user.userId,
       dto,
     );
+  });
+
+  it('duplicates, archives, and cancels through explicit commands', async () => {
+    service.duplicate.mockResolvedValue(assignment);
+    service.archive.mockResolvedValue(assignment);
+    service.cancel.mockResolvedValue(assignment);
+
+    await controller.duplicate(
+      assignment.id,
+      { startDate: '2026-08-17' },
+      user,
+    );
+    await controller.archive(assignment.id, user);
+    await controller.cancel(assignment.id, user);
+
+    expect(service.duplicate).toHaveBeenCalledWith(
+      user.userId,
+      assignment.id,
+      '2026-08-17',
+    );
+    expect(service.archive).toHaveBeenCalledWith(user.userId, assignment.id);
+    expect(service.cancel).toHaveBeenCalledWith(user.userId, assignment.id);
   });
 });

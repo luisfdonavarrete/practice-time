@@ -11,7 +11,7 @@ import type {
 export const assignmentsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAssignments: builder.query<StudentAssignment[], void>({
-      query: () => '/student-assignments',
+      query: () => '/student-assignments?limit=100',
       transformResponse: (response: ApiEnvelope<StudentAssignment[]>) =>
         response.data,
       providesTags: ['Assignments'],
