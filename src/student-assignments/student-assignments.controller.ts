@@ -72,6 +72,16 @@ export class StudentAssignmentsController {
     );
   }
 
+  @Post(':id/publish')
+  async publish(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return new StudentAssignmentResponseDto(
+      await this.studentAssignmentsService.publish(user.userId, id),
+    );
+  }
+
   @Delete(':id')
   remove(
     @Param('id', ParseUUIDPipe) id: string,

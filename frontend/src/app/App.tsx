@@ -8,6 +8,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { ProtectedRoute } from '../features/auth/ProtectedRoute';
 import { SessionBoundary } from '../features/auth/SessionBoundary';
 import type { AppStore } from './store';
+import { AssignmentAuthoringPage } from '../pages/AssignmentAuthoringPage';
 
 interface AppProps {
   appStore?: AppStore;
@@ -41,11 +42,11 @@ export function App({ appStore = store }: AppProps) {
                 />
                 <Route
                   path="assignments/new"
-                  element={<PlaceholderPage title="Create assignment" />}
+                  element={<AssignmentAuthoringPage />}
                 />
                 <Route
                   path="assignments/:assignmentId/duplicate"
-                  element={<PlaceholderPage title="Duplicate assignment" />}
+                  element={<AssignmentAuthoringPage />}
                 />
               </Route>
             </Route>

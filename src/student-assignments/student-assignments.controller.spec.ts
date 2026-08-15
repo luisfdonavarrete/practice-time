@@ -13,7 +13,7 @@ describe('StudentAssignmentsController', () => {
   let service: jest.Mocked<
     Pick<
       StudentAssignmentsService,
-      'create' | 'findAll' | 'findOne' | 'update' | 'remove'
+      'create' | 'findAll' | 'findOne' | 'update' | 'publish' | 'remove'
     >
   >;
   let controller: StudentAssignmentsController;
@@ -24,11 +24,20 @@ describe('StudentAssignmentsController', () => {
       findAll: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn(),
+      publish: jest.fn(),
       remove: jest.fn(),
     };
     controller = new StudentAssignmentsController(
       service as StudentAssignmentsService,
     );
+  });
+
+  it('publishes a draft through the authenticated owner', async () => {
+    service.publish.mockResolvedValue(assignment);
+
+    await controller.publish(assignment.id, user);
+
+    expect(service.publish).toHaveBeenCalledWith(user.userId, assignment.id);
   });
 
   it('creates an assignment through the authenticated owner', async () => {

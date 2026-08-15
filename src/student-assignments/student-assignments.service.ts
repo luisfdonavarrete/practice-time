@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateStudentAssignmentDto } from './dto/create-student-assignment.dto';
 import { UpdateStudentAssignmentDto } from './dto/update-student-assignment.dto';
-import { StudentAssignment } from './entities/student-assignment.entity';
+import {
+  StudentAssignment,
+  StudentAssignmentStatus,
+} from './entities/student-assignment.entity';
 import { Student } from '../students/entities/student.entity';
 import { AssignmentNotice } from './entities/assignment-notice.entity';
 import { AssignmentSection } from './entities/assignment-section.entity';
@@ -129,6 +136,17 @@ export class StudentAssignmentsService {
   async remove(ownerUserId: string, id: string): Promise<void> {
     const assignment = await this.findOne(ownerUserId, id);
     await this.studentAssignmentRepository.remove(assignment);
+  }
+
+  async publish(ownerUserId: string, id: string): Promise<StudentAssignment> {
+    const assignment = await this.findOne(ownerUserId, id);
+    if (assignment.status !== StudentAssignmentStatus.DRAFT) {
+      throw new BadRequestException('Only draft assignments can be published');
+    }
+    assignment.status = StudentAssignmentStatus.PUBLISHED;
+    assignment.publishedAt = new Date();
+    await this.studentAssignmentRepository.save(assignment);
+    return this.findOne(ownerUserId, id);
   }
 
   private getOwnedAssignmentQuery(

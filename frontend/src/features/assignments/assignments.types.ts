@@ -17,6 +17,18 @@ export interface AssignmentItem {
   suggestedPracticeDays: number | null;
   dueAt: string | null;
   position: number;
+  resources: AssignmentResource[];
+}
+
+export interface AssignmentResource {
+  id: string;
+  kind: 'upload' | 'external_link' | 'youtube';
+  displayName: string;
+  originalFilename: string | null;
+  mimeType: string | null;
+  byteSize: number | null;
+  url: string | null;
+  position: number;
 }
 
 export interface AssignmentSection {
@@ -68,4 +80,39 @@ export interface Achievement {
   title: string;
   description: string;
   unlockedAt: string;
+}
+
+export interface CreateAssignmentResource {
+  kind: 'external_link' | 'youtube';
+  displayName: string;
+  url: string;
+  position: number;
+}
+
+export interface CreateStudentAssignment {
+  studentId: string;
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  notices: Array<{
+    title: string;
+    occursAt?: string;
+    location?: string;
+    details?: string;
+    position: number;
+  }>;
+  sections: Array<{
+    title: string;
+    position: number;
+    items: Array<{
+      title: string;
+      instructions?: string;
+      completionMode: 'practice_days' | 'one_time';
+      suggestedPracticeDays?: number;
+      dueAt?: string;
+      position: number;
+      resources: CreateAssignmentResource[];
+    }>;
+  }>;
 }
