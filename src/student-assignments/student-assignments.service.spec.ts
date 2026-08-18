@@ -12,6 +12,10 @@ describe('StudentAssignmentsService lifecycle', () => {
     Pick<Repository<StudentAssignment>, 'save' | 'remove'>
   >;
   let service: StudentAssignmentsService;
+  let findWritableAssignment: jest.Mock<
+    Promise<StudentAssignment>,
+    [string, string]
+  >;
 
   beforeEach(() => {
     repository = {
@@ -23,11 +27,21 @@ describe('StudentAssignmentsService lifecycle', () => {
       {} as Repository<Student>,
       {} as DataSource,
     );
+    findWritableAssignment = jest.fn<
+      Promise<StudentAssignment>,
+      [string, string]
+    >();
+    (
+      service as unknown as {
+        findWritableAssignment: typeof findWritableAssignment;
+      }
+    ).findWritableAssignment = findWritableAssignment;
   });
 
   it('publishes drafts and archives published assignments', async () => {
     const draft = assignment(StudentAssignmentStatus.DRAFT);
     const published = assignment(StudentAssignmentStatus.PUBLISHED);
+    findWritableAssignment.mockResolvedValueOnce(draft);
     jest.spyOn(service, 'findOne').mockResolvedValue(draft);
     repository.save.mockResolvedValue(draft);
 
@@ -41,6 +55,7 @@ describe('StudentAssignmentsService lifecycle', () => {
       .mockReset()
       .mockResolvedValueOnce(published)
       .mockResolvedValueOnce(published);
+    findWritableAssignment.mockResolvedValueOnce(published);
     repository.save.mockResolvedValue(published);
 
     await service.archive('owner-id', published.id);
@@ -51,6 +66,7 @@ describe('StudentAssignmentsService lifecycle', () => {
 
   it('allows cancellation only from draft or published states', async () => {
     const published = assignment(StudentAssignmentStatus.PUBLISHED);
+    findWritableAssignment.mockResolvedValueOnce(published);
     jest
       .spyOn(service, 'findOne')
       .mockResolvedValueOnce(published)
@@ -62,6 +78,7 @@ describe('StudentAssignmentsService lifecycle', () => {
     expect(published.status).toBe(StudentAssignmentStatus.CANCELLED);
 
     const archived = assignment(StudentAssignmentStatus.ARCHIVED);
+    findWritableAssignment.mockResolvedValueOnce(archived);
     jest.spyOn(service, 'findOne').mockReset().mockResolvedValue(archived);
     await expect(service.cancel('owner-id', archived.id)).rejects.toThrow(
       BadRequestException,
@@ -70,6 +87,7 @@ describe('StudentAssignmentsService lifecycle', () => {
 
   it('deletes drafts but preserves published history', async () => {
     const draft = assignment(StudentAssignmentStatus.DRAFT);
+    findWritableAssignment.mockResolvedValueOnce(draft);
     jest.spyOn(service, 'findOne').mockResolvedValueOnce(draft);
     repository.remove.mockResolvedValue(draft);
 
@@ -78,6 +96,7 @@ describe('StudentAssignmentsService lifecycle', () => {
     expect(repository.remove).toHaveBeenCalledWith(draft);
 
     const published = assignment(StudentAssignmentStatus.PUBLISHED);
+    findWritableAssignment.mockResolvedValueOnce(published);
     jest.spyOn(service, 'findOne').mockReset().mockResolvedValue(published);
     await expect(service.remove('owner-id', published.id)).rejects.toThrow(
       BadRequestException,

@@ -149,6 +149,7 @@ export class StudentAssignmentsService {
       const assignment = await this.getOwnedAssignmentQuery(
         ownerUserId,
         assignmentRepository,
+        true,
       )
         .andWhere('assignment.id = :id', { id })
         .getOne();
@@ -308,7 +309,7 @@ export class StudentAssignmentsService {
   }
 
   async remove(ownerUserId: string, id: string): Promise<void> {
-    const assignment = await this.findOne(ownerUserId, id);
+    const assignment = await this.findWritableAssignment(ownerUserId, id);
     if (assignment.status !== StudentAssignmentStatus.DRAFT) {
       throw new BadRequestException('Only draft assignments can be deleted');
     }
@@ -316,7 +317,7 @@ export class StudentAssignmentsService {
   }
 
   async publish(ownerUserId: string, id: string): Promise<StudentAssignment> {
-    const assignment = await this.findOne(ownerUserId, id);
+    const assignment = await this.findWritableAssignment(ownerUserId, id);
     if (assignment.status !== StudentAssignmentStatus.DRAFT) {
       throw new BadRequestException('Only draft assignments can be published');
     }
@@ -348,13 +349,16 @@ export class StudentAssignmentsService {
           `StudentAssignment with ID "${id}" not found`,
         );
       }
-      await manager.getRepository(Student).findOneOrFail({
+      const activeStudent = await manager.getRepository(Student).findOne({
         where: {
           id: source.studentId,
           ownerUserId,
           isActive: true,
         },
       });
+      if (!activeStudent) {
+        throw new NotFoundException('Student not found');
+      }
 
       const duplicate = assignmentRepository.create({
         studentId: source.studentId,
@@ -418,7 +422,7 @@ export class StudentAssignmentsService {
   }
 
   async archive(ownerUserId: string, id: string): Promise<StudentAssignment> {
-    const assignment = await this.findOne(ownerUserId, id);
+    const assignment = await this.findWritableAssignment(ownerUserId, id);
     if (assignment.status !== StudentAssignmentStatus.PUBLISHED) {
       throw new BadRequestException(
         'Only published assignments can be archived',
@@ -431,7 +435,7 @@ export class StudentAssignmentsService {
   }
 
   async cancel(ownerUserId: string, id: string): Promise<StudentAssignment> {
-    const assignment = await this.findOne(ownerUserId, id);
+    const assignment = await this.findWritableAssignment(ownerUserId, id);
     if (
       assignment.status !== StudentAssignmentStatus.DRAFT &&
       assignment.status !== StudentAssignmentStatus.PUBLISHED
@@ -448,8 +452,9 @@ export class StudentAssignmentsService {
   private getOwnedAssignmentQuery(
     ownerUserId: string,
     repository = this.studentAssignmentRepository,
+    requireActiveStudent = false,
   ): SelectQueryBuilder<StudentAssignment> {
-    return repository
+    const query = repository
       .createQueryBuilder('assignment')
       .innerJoin('assignment.student', 'student')
       .leftJoinAndSelect('assignment.notices', 'notice')
@@ -461,6 +466,33 @@ export class StudentAssignmentsService {
         'resource.is_active = true',
       )
       .where('student.owner_user_id = :ownerUserId', { ownerUserId });
+    if (requireActiveStudent) {
+      query.andWhere('student.is_active = true');
+    }
+    return query;
+  }
+
+  private async findWritableAssignment(
+    ownerUserId: string,
+    id: string,
+  ): Promise<StudentAssignment> {
+    const assignment = await this.getOwnedAssignmentQuery(
+      ownerUserId,
+      this.studentAssignmentRepository,
+      true,
+    )
+      .andWhere('assignment.id = :id', { id })
+      .orderBy('notice.position', 'ASC')
+      .addOrderBy('section.position', 'ASC')
+      .addOrderBy('item.position', 'ASC')
+      .addOrderBy('resource.position', 'ASC')
+      .getOne();
+    if (!assignment) {
+      throw new NotFoundException(
+        `StudentAssignment with ID "${id}" not found`,
+      );
+    }
+    return assignment;
   }
 }
 

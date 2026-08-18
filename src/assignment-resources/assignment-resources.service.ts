@@ -13,6 +13,7 @@ import {
   AssignmentResourceKind,
 } from '../student-assignments/entities/assignment-item-resource.entity';
 import { StudentAssignmentItem } from '../student-assignments/entities/student-assignment-item.entity';
+import { StudentAssignmentStatus } from '../student-assignments/entities/student-assignment.entity';
 import { CreateLinkResourceDto } from './dto/create-link-resource.dto';
 import { CreateUploadResourceDto } from './dto/create-upload-resource.dto';
 import {
@@ -38,7 +39,7 @@ export class AssignmentResourcesService {
     dto: CreateUploadResourceDto,
     file: Express.Multer.File | undefined,
   ): Promise<AssignmentItemResource> {
-    await this.requireOwnedItem(ownerUserId, itemId);
+    await this.requireWritableItem(ownerUserId, itemId);
     const mimeType = validateResourceFile(
       file,
       this.storageConfig.maxUploadBytes,
@@ -74,7 +75,7 @@ export class AssignmentResourcesService {
     itemId: string,
     dto: CreateLinkResourceDto,
   ): Promise<AssignmentItemResource> {
-    await this.requireOwnedItem(ownerUserId, itemId);
+    await this.requireWritableItem(ownerUserId, itemId);
     const url = this.normalizeUrl(dto.url, dto.kind);
     return this.resourceRepository.save(
       this.resourceRepository.create({
@@ -119,7 +120,10 @@ export class AssignmentResourcesService {
   }
 
   async remove(ownerUserId: string, resourceId: string): Promise<void> {
-    const resource = await this.requireOwnedResource(ownerUserId, resourceId);
+    const resource = await this.requireWritableResource(
+      ownerUserId,
+      resourceId,
+    );
     const assetKey = resource.assetKey;
     await this.dataSource.transaction(async (manager) => {
       if (assetKey) {
@@ -168,6 +172,48 @@ export class AssignmentResourcesService {
       .where('resource.id = :resourceId', { resourceId })
       .andWhere('resource.is_active = true')
       .andWhere('student.owner_user_id = :ownerUserId', { ownerUserId })
+      .getOne();
+    if (!resource) throw new NotFoundException('Assignment resource not found');
+    return resource;
+  }
+
+  private async requireWritableItem(
+    ownerUserId: string,
+    itemId: string,
+  ): Promise<StudentAssignmentItem> {
+    const item = await this.itemRepository
+      .createQueryBuilder('item')
+      .innerJoin('item.section', 'section')
+      .innerJoin('section.assignment', 'assignment')
+      .innerJoin('assignment.student', 'student')
+      .where('item.id = :itemId', { itemId })
+      .andWhere('student.owner_user_id = :ownerUserId', { ownerUserId })
+      .andWhere('student.is_active = true')
+      .andWhere('assignment.status = :status', {
+        status: StudentAssignmentStatus.DRAFT,
+      })
+      .getOne();
+    if (!item) throw new NotFoundException('Assignment item not found');
+    return item;
+  }
+
+  private async requireWritableResource(
+    ownerUserId: string,
+    resourceId: string,
+  ): Promise<AssignmentItemResource> {
+    const resource = await this.resourceRepository
+      .createQueryBuilder('resource')
+      .innerJoin('resource.item', 'item')
+      .innerJoin('item.section', 'section')
+      .innerJoin('section.assignment', 'assignment')
+      .innerJoin('assignment.student', 'student')
+      .where('resource.id = :resourceId', { resourceId })
+      .andWhere('resource.is_active = true')
+      .andWhere('student.owner_user_id = :ownerUserId', { ownerUserId })
+      .andWhere('student.is_active = true')
+      .andWhere('assignment.status = :status', {
+        status: StudentAssignmentStatus.DRAFT,
+      })
       .getOne();
     if (!resource) throw new NotFoundException('Assignment resource not found');
     return resource;

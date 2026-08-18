@@ -220,6 +220,17 @@ Resource endpoints are ownership-scoped:
 - `DELETE /assignment-resources/:resourceId` removes a reference and deletes
   the object only after its final reference is removed.
 
+Assignment authorization follows the owned-student MVP policy. Assignment,
+nested-item, resource, practice, progress, and achievement queries derive
+access from `student.owner_user_id`; an unrelated user receives a not-found
+response instead of resource-existence information. Deactivating a student is
+write-blocking, not destructive: the owner can still read historical draft,
+published, archived, and cancelled assignments and their resources, but cannot
+edit, publish, duplicate, cancel, archive, or delete them. Resource creation,
+replacement, reordering, and removal additionally require an active student and
+a draft assignment. Shared guardians, self-student accounts, teachers, and
+schools remain outside the MVP policy.
+
 ## Common commands
 
 ```bash
