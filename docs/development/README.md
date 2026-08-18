@@ -247,6 +247,9 @@ npm run test:cov
 # Lint and automatically fix supported issues
 npm run lint
 
+# Check lint without modifying files (the command used in CI)
+npm run lint:check
+
 # Format source and test files
 npm run format
 ```

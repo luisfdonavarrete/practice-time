@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-quality:
+    name: Backend / lint, build, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint:check
+      - name: Build
+        run: npm run build
+      - name: Run unit tests
+        run: npm test -- --runInBand
+
+  frontend-quality:
+    name: Frontend / lint, build, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint:check
+      - name: Build
+        run: npm run build
+      - name: Run unit tests
+        run: npm test
+
+  backend-e2e:
+    name: Backend / PostgreSQL end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: practice_time_ci
+          POSTGRES_USER: practice_time_ci
+          POSTGRES_PASSWORD: practice_time_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U practice_time_ci -d practice_time_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      FRONTEND_ORIGIN: http://localhost:5173
+      JWT_SECRET: ci-only-jwt-secret-that-is-at-least-32-characters
+      JWT_EXPIRES: 15m
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: practice_time_ci
+      DB_USERNAME: practice_time_ci
+      DB_PASSWORD: practice_time_ci
+      S3_REGION: us-east-1
+      S3_BUCKET: practice-time-ci
+      S3_ENDPOINT: http://localhost:4566
+      S3_PUBLIC_ENDPOINT: http://localhost:4566
+      S3_ACCESS_KEY_ID: test
+      S3_SECRET_ACCESS_KEY: test
+      S3_FORCE_PATH_STYLE: 'true'
+      S3_SIGNED_URL_TTL_SECONDS: 300
+      RESOURCE_MAX_UPLOAD_BYTES: 15728640
+      PGPASSWORD: practice_time_ci
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Enable PostgreSQL UUID extension
+        run: >-
+          psql --host localhost --username practice_time_ci
+          --dbname practice_time_ci
+          --command 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+      - name: Apply database migrations
+        run: npm run migration:run
+      - name: Run end-to-end tests
+        run: npm run test:e2e -- --runInBand
