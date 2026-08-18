@@ -38,7 +38,7 @@ Run the same checks locally before opening or merging a pull request:
 
 ```bash
 # API checks
-npm ci
+npm ci --legacy-peer-deps
 npm run lint:check
 npm run build
 npm test -- --runInBand
