@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Metronome } from '../components/Metronome';
 import { ResourceViewer } from '../components/ResourceViewer';
 import { AchievementToast } from '../components/AchievementToast';
-import { useAppSelector } from '../app/hooks';
 import {
   useCompleteAssignmentItemMutation,
   useCreatePracticeSessionMutation,
@@ -24,18 +23,16 @@ import { useGetStudentsQuery } from '../features/students/students.api';
 export function PracticePlayerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const online = useOnlineStatus();
-  const selectedStudentId = useAppSelector(
-    (state) => state.studentContext.selectedStudentId,
-  );
+  const { studentId = '' } = useParams();
   const students = useGetStudentsQuery();
   const assignments = useGetAssignmentsQuery();
   const selectedStudent = students.data?.data.find(
-    (student) => student.id === selectedStudentId,
+    (student) => student.id === studentId,
   );
   const requestedAssignmentId = searchParams.get('assignment');
   const assignment = selectAssignment(
     assignments.data ?? [],
-    selectedStudentId,
+    studentId,
     requestedAssignmentId,
     selectedStudent?.timeZone,
   );
@@ -53,7 +50,7 @@ export function PracticePlayerPage() {
     (item) => item.itemId === selectedItem?.id,
   );
   const { achievement, dismiss } = useAchievementSocket(
-    selectedStudentId,
+    studentId || null,
     assignment?.id ?? null,
   );
 
@@ -94,7 +91,7 @@ export function PracticePlayerPage() {
           <h1 id="practice-title">Practice with {selectedStudent.firstName}</h1>
           <p>{formatDateRange(assignment.startDate, assignment.endDate)}</p>
         </div>
-        <Link className="text-link" to="/">
+        <Link className="text-link" to={`/students/${studentId}`}>
           Back to dashboard
         </Link>
       </header>
@@ -413,7 +410,7 @@ function PracticeMessage({ title, detail }: { title: string; detail: string }) {
       <p className="eyebrow">Practice room</p>
       <h1>{title}</h1>
       <p>{detail}</p>
-      <Link className="primary-link" to="/assignments/new">
+      <Link className="primary-link" to="../assignments/new" relative="path">
         Create assignment
       </Link>
     </section>
@@ -422,7 +419,7 @@ function PracticeMessage({ title, detail }: { title: string; detail: string }) {
 
 function selectAssignment(
   assignments: StudentAssignment[],
-  studentId: string | null,
+  studentId: string,
   requestedId: string | null,
   timeZone?: string,
 ): StudentAssignment | undefined {

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { useAppDispatch } from '../app/hooks';
 import { environment } from '../config/env';
 import {
   useCreateAssignmentMutation,
@@ -90,7 +90,7 @@ export function AssignmentAuthoringPage({
 }: {
   mode?: AuthoringMode;
 }) {
-  const { assignmentId } = useParams();
+  const { assignmentId, studentId = '' } = useParams();
   const sourceQuery = useGetAssignmentQuery(assignmentId ?? '', {
     skip: mode === 'create' || !assignmentId,
   });
@@ -114,7 +114,7 @@ export function AssignmentAuthoringPage({
           {mode === 'edit' ? 'edited' : 'duplicated'}.
         </h1>
         <p>The assignment may no longer be available to this account.</p>
-        <Link className="secondary-link" to="/">
+        <Link className="secondary-link" to={`/students/${studentId}`}>
           Return to dashboard
         </Link>
       </section>
@@ -127,7 +127,7 @@ export function AssignmentAuthoringPage({
         <p className="eyebrow">Published assignment</p>
         <h1>Only drafts can be edited.</h1>
         <p>Duplicate this assignment to make a new editable practice week.</p>
-        <Link className="secondary-link" to="/">
+        <Link className="secondary-link" to={`/students/${studentId}`}>
           Return to dashboard
         </Link>
       </section>
@@ -138,6 +138,7 @@ export function AssignmentAuthoringPage({
     <AssignmentAuthoringForm
       key={assignmentId ?? 'new-assignment'}
       assignmentId={assignmentId}
+      studentId={studentId}
       source={sourceQuery.data}
       mode={mode}
     />
@@ -146,18 +147,17 @@ export function AssignmentAuthoringPage({
 
 function AssignmentAuthoringForm({
   assignmentId,
+  studentId,
   source,
   mode,
 }: {
   assignmentId?: string;
+  studentId: string;
   source?: StudentAssignment;
   mode: AuthoringMode;
 }) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const selectedStudentId = useAppSelector(
-    (state) => state.studentContext.selectedStudentId,
-  );
   const studentsQuery = useGetStudentsQuery();
   const [createAssignment, createState] = useCreateAssignmentMutation();
   const [updateAssignment, updateState] = useUpdateAssignmentMutation();
@@ -167,7 +167,7 @@ function AssignmentAuthoringForm({
       ? mode === 'edit'
         ? editDraft(source)
         : duplicateDraft(source)
-      : emptyDraft(selectedStudentId ?? ''),
+      : emptyDraft(studentId),
   );
   const [errors, setErrors] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -205,7 +205,7 @@ function AssignmentAuthoringForm({
       );
       if (publish) await publishAssignment(saved.id).unwrap();
       dispatch(uploadStatusCleared());
-      navigate('/', { replace: true });
+      navigate(`/students/${draft.studentId}`, { replace: true });
     } catch (error) {
       setSaveError(authoringErrorMessage(error));
     }
@@ -223,7 +223,7 @@ function AssignmentAuthoringForm({
       );
       if (pendingPublish) await publishAssignment(savedAssignment.id).unwrap();
       dispatch(uploadStatusCleared());
-      navigate('/', { replace: true });
+      navigate(`/students/${draft.studentId}`, { replace: true });
     } catch (error) {
       setSaveError(authoringErrorMessage(error));
     }
@@ -231,6 +231,9 @@ function AssignmentAuthoringForm({
 
   const busy =
     createState.isLoading || updateState.isLoading || publishState.isLoading;
+  const student = studentsQuery.data?.data.find(
+    ({ id }) => id === draft.studentId,
+  );
 
   return (
     <section className="authoring-page" aria-labelledby="authoring-title">
@@ -255,7 +258,7 @@ function AssignmentAuthoringForm({
             saved. A week always contains seven local calendar days.
           </p>
         </div>
-        <Link className="text-link" to="/">
+        <Link className="text-link" to={`/students/${draft.studentId}`}>
           Cancel
         </Link>
       </header>
@@ -300,20 +303,15 @@ function AssignmentAuthoringForm({
             <div className="form-grid">
               <label>
                 Student
-                <select
-                  value={draft.studentId}
-                  disabled={mode !== 'create'}
-                  onChange={(event) =>
-                    setDraft({ ...draft, studentId: event.target.value })
+                <input
+                  value={
+                    student
+                      ? `${student.firstName} ${student.lastName}`
+                      : 'Student workspace'
                   }
-                >
-                  <option value="">Choose a student</option>
-                  {studentsQuery.data?.data.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.firstName} {student.lastName}
-                    </option>
-                  ))}
-                </select>
+                  readOnly
+                  aria-describedby="student-workspace-help"
+                />
               </label>
               <label>
                 Week starts
@@ -355,6 +353,9 @@ function AssignmentAuthoringForm({
                 />
               </label>
             </div>
+            <p id="student-workspace-help" className="field-help">
+              This assignment belongs to the student workspace you opened.
+            </p>
             <p id="week-range-help" className="field-help">
               {draft.startDate
                 ? `${formatDate(draft.startDate)} through ${formatDate(endDate)}`

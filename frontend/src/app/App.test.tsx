@@ -76,7 +76,11 @@ describe('authentication flow', () => {
       return authenticatedApiResponse(request, 'new-token');
     });
     vi.stubGlobal('fetch', fetchMock);
-    window.history.replaceState({}, '', '/practice');
+    window.history.replaceState(
+      {},
+      '',
+      '/students/3bd10a90-bca1-4e1e-87f2-f98b01322ee0/practice',
+    );
     render(<App appStore={createAppStore()} />);
     await screen.findByRole('heading', { name: 'Sign in' });
 
@@ -90,7 +94,9 @@ describe('authentication flow', () => {
       }),
     ).toBeInTheDocument();
     expect(authStorage.read()).toBe('new-token');
-    expect(window.location.pathname).toBe('/practice');
+    expect(window.location.pathname).toBe(
+      '/students/3bd10a90-bca1-4e1e-87f2-f98b01322ee0/practice',
+    );
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
@@ -111,11 +117,15 @@ describe('authentication flow', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText('Luis')).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('shows the selected student current assignment, progress, notices, and rewards', async () => {
     authStorage.write('valid-token');
+    window.localStorage.setItem(
+      'practice-time.selected-student',
+      '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
+    );
     vi.stubGlobal(
       'fetch',
       vi.fn<typeof fetch>().mockImplementation((input) => {
@@ -293,6 +303,13 @@ describe('authentication flow', () => {
     expect(
       screen.getByRole('button', { name: 'Start timer' }),
     ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('link', { name: 'Students' }));
+    expect(
+      await screen.findByRole('heading', { name: 'Who is practicing?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'This week' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Practice' })).toBeInTheDocument();
   });
 
   it('clears authentication and returns to login on logout', async () => {

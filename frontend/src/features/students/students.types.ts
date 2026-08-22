@@ -15,3 +15,10 @@ export interface PaginatedStudents {
     totalPages: number;
   };
 }
+
+export interface SaveStudentRequest {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  timeZone: string;
+}

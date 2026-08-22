@@ -1,30 +1,52 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
 import { useLogout } from '../features/auth/use-logout';
-import { StudentSelector } from './StudentSelector';
 import { UploadStatus } from './UploadStatus';
-
-const navigation = [
-  { to: '/', label: 'This week', end: true },
-  { to: '/students', label: 'Students', end: false },
-  { to: '/practice', label: 'Practice', end: false },
-  { to: '/progress', label: 'Progress', end: false },
-] as const;
+import { useGetStudentsQuery } from '../features/students/students.api';
 
 export function AppShell() {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
+  const rememberedStudentId = useAppSelector(
+    (state) => state.studentContext.selectedStudentId,
+  );
   const logout = useLogout();
+  const { studentId } = useParams();
+  const students = useGetStudentsQuery();
+  const activeStudentId = studentId ?? rememberedStudentId ?? undefined;
+  const student = students.data?.data.find(({ id }) => id === activeStudentId);
+  const navigation = student
+    ? [
+        { to: `/students/${student.id}`, label: 'This week', end: true },
+        {
+          to: `/students/${student.id}/practice`,
+          label: 'Practice',
+          end: false,
+        },
+        { to: '/students', label: 'Students', end: true },
+      ]
+    : [{ to: '/students', label: 'Students', end: true }];
 
   return (
     <div className="app-shell">
       <header className="app-header">
-        <NavLink className="brand" to="/" aria-label="Practice Time home">
+        <NavLink
+          className="brand"
+          to={student ? `/students/${student.id}` : '/students'}
+          aria-label="Practice Time home"
+        >
           <span className="brand-mark" aria-hidden="true">
             ♪
           </span>
           <span>Practice Time</span>
         </NavLink>
-        <StudentSelector />
+        {student && (
+          <div className="active-student">
+            <span>
+              Practicing with <strong>{student.firstName}</strong>
+            </span>
+            <NavLink to="/students">Change</NavLink>
+          </div>
+        )}
         <div className="account-menu">
           <span>{currentUser?.firstName}</span>
           <button type="button" onClick={logout}>

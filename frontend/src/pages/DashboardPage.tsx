@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { useAppSelector } from '../app/hooks';
+import { Link, useParams } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
+import { useAppDispatch } from '../app/hooks';
 import {
   useGetAchievementsQuery,
   useGetAssignmentsQuery,
@@ -15,19 +15,19 @@ import { useOnlineStatus } from '../features/network/use-online-status';
 import { useGetStudentsQuery } from '../features/students/students.api';
 import { useAchievementSocket } from '../features/achievements/use-achievement-socket';
 import { AchievementToast } from '../components/AchievementToast';
+import { studentSelected } from '../features/students/student-context.slice';
 
 export function DashboardPage() {
   const online = useOnlineStatus();
-  const selectedStudentId = useAppSelector(
-    (state) => state.studentContext.selectedStudentId,
-  );
+  const { studentId = '' } = useParams();
+  const dispatch = useAppDispatch();
   const studentsQuery = useGetStudentsQuery();
   const assignmentsQuery = useGetAssignmentsQuery();
   const selectedStudent = studentsQuery.data?.data.find(
-    (student) => student.id === selectedStudentId,
+    (student) => student.id === studentId,
   );
   const assignments = (assignmentsQuery.data ?? []).filter(
-    (assignment) => assignment.studentId === selectedStudentId,
+    (assignment) => assignment.studentId === studentId,
   );
   const today = selectedStudent
     ? localDateInTimeZone(new Date(), selectedStudent.timeZone)
@@ -43,11 +43,15 @@ export function DashboardPage() {
       skip: !currentAssignment,
     },
   );
-  const achievementsQuery = useGetAchievementsQuery(selectedStudentId ?? '', {
-    skip: !selectedStudentId,
+  const achievementsQuery = useGetAchievementsQuery(studentId, {
+    skip: !selectedStudent,
   });
   const { achievement: unlockedAchievement, dismiss: dismissAchievement } =
-    useAchievementSocket(selectedStudentId, currentAssignment?.id ?? null);
+    useAchievementSocket(studentId || null, currentAssignment?.id ?? null);
+
+  useEffect(() => {
+    if (selectedStudent) dispatch(studentSelected(selectedStudent.id));
+  }, [dispatch, selectedStudent]);
 
   if (!online) {
     return (
@@ -109,7 +113,20 @@ export function DashboardPage() {
     );
   }
 
-  if (!selectedStudent) return <DashboardLoading />;
+  if (!selectedStudent) {
+    return (
+      <DashboardMessage
+        eyebrow="Student unavailable"
+        title="Choose a student to continue."
+        detail="This student may have been deactivated or may not belong to this account."
+        action={
+          <Link className="primary-link" to="/students">
+            Choose student
+          </Link>
+        }
+      />
+    );
+  }
 
   if (!currentAssignment) {
     return (
@@ -131,13 +148,16 @@ export function DashboardPage() {
         }
         action={
           <div className="button-row">
-            <Link className="primary-link" to="/assignments/new">
+            <Link
+              className="primary-link"
+              to={`/students/${studentId}/assignments/new`}
+            >
               Create assignment
             </Link>
             {latestExpiredAssignment && (
               <Link
                 className="secondary-link"
-                to={`/assignments/${latestExpiredAssignment.id}/duplicate`}
+                to={`/students/${studentId}/assignments/${latestExpiredAssignment.id}/duplicate`}
               >
                 Duplicate last week
               </Link>
@@ -165,25 +185,28 @@ export function DashboardPage() {
           {currentAssignment.status === 'draft' ? (
             <Link
               className="primary-link"
-              to={`/assignments/${currentAssignment.id}/edit`}
+              to={`/students/${studentId}/assignments/${currentAssignment.id}/edit`}
             >
               Edit draft
             </Link>
           ) : (
             <Link
               className="primary-link"
-              to={`/practice?assignment=${currentAssignment.id}`}
+              to={`/students/${studentId}/practice?assignment=${currentAssignment.id}`}
             >
               Continue practice
             </Link>
           )}
           <Link
             className="secondary-link"
-            to={`/assignments/${currentAssignment.id}/duplicate`}
+            to={`/students/${studentId}/assignments/${currentAssignment.id}/duplicate`}
           >
             Duplicate week
           </Link>
-          <Link className="text-link" to="/assignments/new">
+          <Link
+            className="text-link"
+            to={`/students/${studentId}/assignments/new`}
+          >
             New assignment
           </Link>
         </div>
