@@ -11,15 +11,12 @@ import { EntityNotFoundError } from 'typeorm';
 @Catch(EntityNotFoundError)
 @Injectable()
 export class EntityNotFoundExceptionFilter implements ExceptionFilter<EntityNotFoundError> {
-  private readonly baseExceptionFilter: BaseExceptionFilter;
-
-  constructor(httpAdapterHost: HttpAdapterHost) {
-    this.baseExceptionFilter = new BaseExceptionFilter(
-      httpAdapterHost.httpAdapter,
-    );
-  }
+  constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(_exception: EntityNotFoundError, host: ArgumentsHost): void {
-    this.baseExceptionFilter.catch(new NotFoundException(), host);
+    new BaseExceptionFilter(this.httpAdapterHost.httpAdapter).catch(
+      new NotFoundException(),
+      host,
+    );
   }
 }
