@@ -8,7 +8,9 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { CurrentUser } from './decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from './models/authenticated-user';
 import { Public } from './decorators/public.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -30,6 +32,7 @@ export class AuthController {
   }
 
   @Get('/me')
+  @ApiBearerAuth('bearer')
   async getProfile(
     @CurrentUser() authenticatedUser: AuthenticatedUser,
   ): Promise<UserDto> {

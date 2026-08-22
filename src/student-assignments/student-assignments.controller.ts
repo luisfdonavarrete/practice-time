@@ -19,7 +19,10 @@ import { StudentAssignmentResponseDto } from './dto/student-assignment-response.
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { DuplicateStudentAssignmentDto } from './dto/duplicate-student-assignment.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('weekly assignments')
+@ApiBearerAuth('bearer')
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('student-assignments')
 export class StudentAssignmentsController {

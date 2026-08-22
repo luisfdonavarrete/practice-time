@@ -19,7 +19,10 @@ import { PracticeSessionResponseDto } from './dto/practice-session-response.dto'
 import { UpdatePracticeSessionDto } from './dto/update-practice-session.dto';
 import { PracticeSessionMapper } from './practice-session.mapper';
 import { PracticeSessionsService } from './practice-sessions.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('practice')
+@ApiBearerAuth('bearer')
 @Controller('practice-sessions')
 export class PracticeSessionsController {
   constructor(private readonly sessions: PracticeSessionsService) {}

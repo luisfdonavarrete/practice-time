@@ -3,7 +3,10 @@ import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { PracticeSummaryDto } from './dto/practice-summary.dto';
 import { PracticeProgressService } from './practice-progress.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('practice')
+@ApiBearerAuth('bearer')
 @Controller('student-assignments')
 export class PracticeProgressController {
   constructor(private readonly progress: PracticeProgressService) {}

@@ -1,6 +1,6 @@
 import { AssignmentCompletionMode } from '../../student-assignments/entities/student-assignment-item.entity';
 
-export interface PracticeItemProgressDto {
+export class PracticeItemProgressDto {
   itemId: string;
   sectionId: string;
   sectionTitle: string;
@@ -13,7 +13,7 @@ export interface PracticeItemProgressDto {
   itemPosition: number;
 }
 
-export interface PracticeSummaryDto {
+export class PracticeSummaryDto {
   assignmentId: string;
   studentId: string;
   startDate: string;

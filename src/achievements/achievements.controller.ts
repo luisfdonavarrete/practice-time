@@ -1,11 +1,12 @@
 import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { AchievementResponseDto } from './dto/achievement-response.dto';
 import { AchievementsService } from './achievements.service';
 
 @ApiTags('achievements')
+@ApiBearerAuth('bearer')
 @Controller('students/:studentId/achievements')
 export class AchievementsController {
   constructor(private readonly achievements: AchievementsService) {}

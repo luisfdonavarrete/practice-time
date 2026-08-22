@@ -9,6 +9,7 @@ import { GlobalResponseInterceptor } from './common/interceptors/global-response
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import type { INestApplicationContext } from '@nestjs/common';
 import { Server, type ServerOptions } from 'socket.io';
+import { configureOpenApi } from './common/api/open-api';
 
 class FrontendIoAdapter extends IoAdapter {
   constructor(
@@ -65,6 +66,8 @@ async function bootstrap() {
     defaultLimit: 20,
     defaultMaxLimit: 100,
   });
+
+  configureOpenApi(app, configService.nodeEnv);
 
   await app.listen(configService.port);
 }

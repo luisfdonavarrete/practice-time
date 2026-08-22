@@ -11,14 +11,23 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { AssignmentResourceResponseDto } from '../student-assignments/dto/assignment-resource-response.dto';
 import { AssignmentResourcesService } from './assignment-resources.service';
 import { CreateLinkResourceDto } from './dto/create-link-resource.dto';
 import { CreateUploadResourceDto } from './dto/create-upload-resource.dto';
+import { ResourceAccessResponseDto } from './dto/resource-access-response.dto';
 
+@ApiTags('assignment resources')
+@ApiBearerAuth('bearer')
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller()
 export class AssignmentResourcesController {
@@ -61,10 +70,11 @@ export class AssignmentResourcesController {
   }
 
   @Get('assignment-resources/:resourceId/access-url')
+  @ApiOkResponse({ type: ResourceAccessResponseDto })
   getAccessUrl(
     @Param('resourceId', ParseUUIDPipe) resourceId: string,
     @CurrentUser() user: AuthenticatedUser,
-  ) {
+  ): Promise<ResourceAccessResponseDto> {
     return this.resources.getSignedUrl(user.userId, resourceId);
   }
 

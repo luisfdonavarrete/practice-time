@@ -18,7 +18,10 @@ import type { PaginateQuery } from 'nestjs-paginate';
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('students')
+@ApiBearerAuth('bearer')
 @Controller('students')
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}

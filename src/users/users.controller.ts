@@ -5,7 +5,10 @@ import { UserResponseMapper } from './mappers/user-response.mapper';
 import { UserDto } from './dto/user.dto';
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('authentication')
+@ApiBearerAuth('bearer')
 @Controller('users')
 export class UsersController {
   constructor(

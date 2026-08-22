@@ -24,6 +24,15 @@ The API runs at `http://localhost:3000` and the Vite client runs at
 `http://localhost:5173`. See [frontend/README.md](frontend/README.md) for client
 checks and configuration.
 
+In development and test environments, interactive API documentation is
+available at [http://localhost:3000/api/docs](http://localhost:3000/api/docs),
+with the OpenAPI JSON at
+[http://localhost:3000/api/docs-json](http://localhost:3000/api/docs-json).
+Swagger is intentionally disabled in production. See
+[API and event contracts](docs/api-contracts.md) for the canonical weekly
+assignment example, uploads, authorization behavior, and Socket.IO recovery
+contract.
+
 ## Required quality checks
 
 GitHub Actions runs the following checks for every pull request and every push

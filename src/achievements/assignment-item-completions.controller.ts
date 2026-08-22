@@ -6,13 +6,19 @@ import {
   ParseUUIDPipe,
   Put,
 } from '@nestjs/common';
-import { ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from '../auth/models/authenticated-user';
 import { AssignmentItemCompletionsService } from './assignment-item-completions.service';
 import { AssignmentItemCompletionResponseDto } from './dto/assignment-item-completion-response.dto';
 
 @ApiTags('assignment progress')
+@ApiBearerAuth('bearer')
 @Controller('student-assignment-items/:itemId/completion')
 export class AssignmentItemCompletionsController {
   constructor(private readonly completions: AssignmentItemCompletionsService) {}
