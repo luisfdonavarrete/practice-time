@@ -12,12 +12,11 @@ describe('assignment authoring model', () => {
   it('validates required structure and practice targets', () => {
     const draft = assignmentDraftTestSupport.emptyDraft('student-id');
     draft.title = 'Practice week';
-    draft.sections[0].title = 'Repertoire';
-    draft.sections[0].items[0].title = 'Amazing Grace';
-    draft.sections[0].items[0].suggestedPracticeDays = 8;
+    draft.items[0].title = 'Amazing Grace';
+    draft.items[0].suggestedPracticeDays = 8;
 
     expect(assignmentDraftTestSupport.validateDraft(draft)).toContain(
-      'Area 1, item 1 practice target must be between 1 and 7 days.',
+      'Item 1 practice target must be between 1 and 7 days.',
     );
   });
 
@@ -86,9 +85,10 @@ describe('assignment authoring model', () => {
 
     expect(duplicate.title).toBe('Recital week (copy)');
     expect(duplicate.notices[0].occursAt).toBe('');
-    expect(duplicate.sections[0].items[0].dueAt).toBe('');
-    expect(duplicate.sections[0].items[0].resources).toHaveLength(1);
-    expect(duplicate.sections[0].items[0].resources[0].kind).toBe('youtube');
+    expect(duplicate.items[0].area).toBe('Repertoire');
+    expect(duplicate.items[0].dueAt).toBe('');
+    expect(duplicate.items[0].resources).toHaveLength(1);
+    expect(duplicate.items[0].resources[0].kind).toBe('youtube');
   });
 
   it('edits a draft while retaining existing uploads in the update request', () => {
@@ -146,5 +146,37 @@ describe('assignment authoring model', () => {
       },
     ]);
     expect(request.sections[0].items[0].resources).toEqual([]);
+  });
+
+  it('groups flat items by predefined area order for the API contract', () => {
+    const draft = assignmentDraftTestSupport.emptyDraft('student-id');
+    draft.title = 'Practice week';
+    draft.items[0].area = 'Written Theory';
+    draft.items[0].title = 'Theory test';
+    draft.items.push({
+      ...draft.items[0],
+      localId: 'repertoire-1',
+      area: 'Repertoire',
+      title: 'Amazing Grace',
+      resources: [],
+    });
+    draft.items.push({
+      ...draft.items[0],
+      localId: 'repertoire-2',
+      area: 'Repertoire',
+      title: 'Recital solo',
+      resources: [],
+    });
+
+    const request = assignmentDraftTestSupport.toCreateRequest(draft);
+
+    expect(request.sections.map((section) => section.title)).toEqual([
+      'Repertoire',
+      'Written Theory',
+    ]);
+    expect(request.sections[0].items.map((item) => item.title)).toEqual([
+      'Amazing Grace',
+      'Recital solo',
+    ]);
   });
 });

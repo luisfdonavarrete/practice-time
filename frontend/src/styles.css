@@ -611,8 +611,7 @@ h1 {
   gap: 1rem;
 }
 
-.form-grid label,
-.section-editor > label {
+.form-grid label {
   display: grid;
   align-content: start;
   gap: 0.4rem;
@@ -621,8 +620,7 @@ h1 {
   font-weight: 720;
 }
 
-.form-grid label > span,
-.section-editor > label > span {
+.form-grid label > span {
   color: #737d77;
   font-weight: 500;
 }
@@ -704,8 +702,7 @@ h1 {
 }
 
 .move-buttons button,
-.resource-heading button,
-.add-item-button {
+.resource-heading button {
   min-width: 2rem;
   min-height: 2rem;
   border: 1px solid #b8c1bb;
@@ -745,14 +742,6 @@ h1 {
 
 .item-editor {
   background: #faf9f4;
-}
-
-.add-item-button {
-  width: 100%;
-  min-height: 2.7rem;
-  margin-top: 0.8rem;
-  border-style: dashed;
-  font-weight: 750;
 }
 
 .resource-editor {

@@ -38,18 +38,13 @@ interface ResourceDraft {
 
 interface ItemDraft {
   localId: string;
+  area: string;
   title: string;
   instructions: string;
   completionMode: 'practice_days' | 'one_time';
   suggestedPracticeDays: number;
   dueAt: string;
   resources: ResourceDraft[];
-}
-
-interface SectionDraft {
-  localId: string;
-  title: string;
-  items: ItemDraft[];
 }
 
 interface NoticeDraft {
@@ -66,8 +61,18 @@ interface AssignmentDraft {
   description: string;
   startDate: string;
   notices: NoticeDraft[];
-  sections: SectionDraft[];
+  items: ItemDraft[];
 }
+
+const ASSIGNMENT_AREAS = [
+  'Repertoire',
+  'Technique',
+  'Sight Reading',
+  'Ear Training',
+  'Written Theory',
+  'Music History',
+  'Recital Preparation',
+] as const;
 
 const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 const ACCEPTED_UPLOAD_TYPES = [
@@ -362,11 +367,11 @@ function AssignmentAuthoringForm({
             onChange={(notices) => setDraft({ ...draft, notices })}
           />
 
-          <section className="form-card" aria-labelledby="sections-title">
+          <section className="form-card" aria-labelledby="items-title">
             <div className="form-section-heading">
               <div>
                 <p className="eyebrow">Practice plan</p>
-                <h2 id="sections-title">Areas and assignments</h2>
+                <h2 id="items-title">Assignment items</h2>
               </div>
               <button
                 type="button"
@@ -374,37 +379,41 @@ function AssignmentAuthoringForm({
                 onClick={() =>
                   setDraft({
                     ...draft,
-                    sections: [...draft.sections, newSection()],
+                    items: [...draft.items, newItem()],
                   })
                 }
               >
-                Add area
+                Add assignment item
               </button>
             </div>
-            <div className="section-editor-list">
-              {draft.sections.map((section, sectionIndex) => (
-                <SectionEditor
-                  key={section.localId}
-                  section={section}
-                  index={sectionIndex}
-                  count={draft.sections.length}
+            <p className="field-help">
+              Choose an area for each item. Items are grouped into those areas
+              when the assignment is saved.
+            </p>
+            <div className="item-editor-list">
+              {draft.items.map((item, itemIndex) => (
+                <ItemEditor
+                  key={item.localId}
+                  item={item}
+                  index={itemIndex}
+                  count={draft.items.length}
                   onChange={(next) =>
                     setDraft({
                       ...draft,
-                      sections: replaceAt(draft.sections, sectionIndex, next),
+                      items: replaceAt(draft.items, itemIndex, next),
                     })
                   }
                   onMove={(direction) =>
                     setDraft({
                       ...draft,
-                      sections: move(draft.sections, sectionIndex, direction),
+                      items: move(draft.items, itemIndex, direction),
                     })
                   }
                   onRemove={() =>
                     setDraft({
                       ...draft,
-                      sections: draft.sections.filter(
-                        (_, index) => index !== sectionIndex,
+                      items: draft.items.filter(
+                        (_, index) => index !== itemIndex,
                       ),
                     })
                   }
@@ -420,16 +429,11 @@ function AssignmentAuthoringForm({
           <dl>
             <div>
               <dt>Areas</dt>
-              <dd>{draft.sections.length}</dd>
+              <dd>{new Set(draft.items.map((item) => item.area)).size}</dd>
             </div>
             <div>
               <dt>Items</dt>
-              <dd>
-                {draft.sections.reduce(
-                  (sum, section) => sum + section.items.length,
-                  0,
-                )}
-              </dd>
+              <dd>{draft.items.length}</dd>
             </div>
             <div>
               <dt>Notices</dt>
@@ -575,83 +579,6 @@ function NoticeEditor({
   );
 }
 
-function SectionEditor({
-  section,
-  index,
-  count,
-  onChange,
-  onMove,
-  onRemove,
-}: {
-  section: SectionDraft;
-  index: number;
-  count: number;
-  onChange: (section: SectionDraft) => void;
-  onMove: (direction: -1 | 1) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <fieldset className="nested-editor section-editor">
-      <legend>Area {index + 1}</legend>
-      <div className="editor-actions">
-        <MoveButtons index={index} count={count} onMove={onMove} />
-        <button type="button" className="danger-link" onClick={onRemove}>
-          Remove area
-        </button>
-      </div>
-      <label>
-        Area title
-        <input
-          value={section.title}
-          placeholder="Repertoire"
-          onChange={(event) =>
-            onChange({ ...section, title: event.target.value })
-          }
-        />
-      </label>
-      <div className="item-editor-list">
-        {section.items.map((item, itemIndex) => (
-          <ItemEditor
-            key={item.localId}
-            item={item}
-            index={itemIndex}
-            count={section.items.length}
-            onChange={(next) =>
-              onChange({
-                ...section,
-                items: replaceAt(section.items, itemIndex, next),
-              })
-            }
-            onMove={(direction) =>
-              onChange({
-                ...section,
-                items: move(section.items, itemIndex, direction),
-              })
-            }
-            onRemove={() =>
-              onChange({
-                ...section,
-                items: section.items.filter(
-                  (_, position) => position !== itemIndex,
-                ),
-              })
-            }
-          />
-        ))}
-      </div>
-      <button
-        type="button"
-        className="add-item-button"
-        onClick={() =>
-          onChange({ ...section, items: [...section.items, newItem()] })
-        }
-      >
-        + Add assignment item
-      </button>
-    </fieldset>
-  );
-}
-
 function ItemEditor({
   item,
   index,
@@ -677,6 +604,21 @@ function ItemEditor({
         </button>
       </div>
       <div className="form-grid">
+        <label>
+          Area
+          <select
+            value={item.area}
+            onChange={(event) =>
+              onChange({ ...item, area: event.target.value })
+            }
+          >
+            {areaOptions(item.area).map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="wide-field">
           Title
           <input
@@ -898,7 +840,7 @@ function emptyDraft(studentId: string): AssignmentDraft {
     description: '',
     startDate,
     notices: [],
-    sections: [newSection()],
+    items: [newItem()],
   };
 }
 
@@ -915,11 +857,10 @@ function duplicateDraft(source: StudentAssignment): AssignmentDraft {
       location: notice.location ?? '',
       details: notice.details ?? '',
     })),
-    sections: source.sections.map((section) => ({
-      localId: crypto.randomUUID(),
-      title: section.title,
-      items: section.items.map((item) => ({
+    items: source.sections.flatMap((section) =>
+      section.items.map((item) => ({
         localId: crypto.randomUUID(),
+        area: section.title,
         title: item.title,
         instructions: item.instructions ?? '',
         completionMode: item.completionMode,
@@ -935,7 +876,7 @@ function duplicateDraft(source: StudentAssignment): AssignmentDraft {
             file: null,
           })),
       })),
-    })),
+    ),
   };
 }
 
@@ -952,11 +893,10 @@ function editDraft(source: StudentAssignment): AssignmentDraft {
       location: notice.location ?? '',
       details: notice.details ?? '',
     })),
-    sections: source.sections.map((section) => ({
-      localId: section.id,
-      title: section.title,
-      items: section.items.map((item) => ({
+    items: source.sections.flatMap((section) =>
+      section.items.map((item) => ({
         localId: item.id,
+        area: section.title,
         title: item.title,
         instructions: item.instructions ?? '',
         completionMode: item.completionMode,
@@ -972,7 +912,7 @@ function editDraft(source: StudentAssignment): AssignmentDraft {
           originalFilename: resource.originalFilename ?? undefined,
         })),
       })),
-    })),
+    ),
   };
 }
 
@@ -985,12 +925,10 @@ function newNotice(): NoticeDraft {
     details: '',
   };
 }
-function newSection(): SectionDraft {
-  return { localId: crypto.randomUUID(), title: '', items: [newItem()] };
-}
 function newItem(): ItemDraft {
   return {
     localId: crypto.randomUUID(),
+    area: ASSIGNMENT_AREAS[0],
     title: '',
     instructions: '',
     completionMode: 'practice_days',
@@ -1009,57 +947,87 @@ function newResource(kind: ResourceKind): ResourceDraft {
   };
 }
 
+function areaOptions(currentArea: string): string[] {
+  return ASSIGNMENT_AREAS.includes(
+    currentArea as (typeof ASSIGNMENT_AREAS)[number],
+  )
+    ? [...ASSIGNMENT_AREAS]
+    : [currentArea, ...ASSIGNMENT_AREAS];
+}
+
+function groupDraftItems(items: ItemDraft[]): Array<{
+  area: string;
+  items: ItemDraft[];
+}> {
+  const grouped = new Map<string, ItemDraft[]>();
+  for (const item of items) {
+    const area = item.area.trim();
+    grouped.set(area, [...(grouped.get(area) ?? []), item]);
+  }
+  const areaOrder = new Map(
+    ASSIGNMENT_AREAS.map((area, index) => [area, index]),
+  );
+  return [...grouped.entries()]
+    .sort(([left], [right]) => {
+      const leftPosition = areaOrder.get(
+        left as (typeof ASSIGNMENT_AREAS)[number],
+      );
+      const rightPosition = areaOrder.get(
+        right as (typeof ASSIGNMENT_AREAS)[number],
+      );
+      if (leftPosition !== undefined && rightPosition !== undefined)
+        return leftPosition - rightPosition;
+      if (leftPosition !== undefined) return -1;
+      if (rightPosition !== undefined) return 1;
+      return left.localeCompare(right);
+    })
+    .map(([area, areaItems]) => ({ area, items: areaItems }));
+}
+
 function validateDraft(draft: AssignmentDraft): string[] {
   const errors: string[] = [];
   if (!draft.studentId) errors.push('Choose an owned student.');
   if (!draft.title.trim()) errors.push('Enter an assignment title.');
   if (!draft.startDate) errors.push('Choose a local start date.');
-  if (draft.sections.length === 0)
-    errors.push('Add at least one practice area.');
+  if (draft.items.length === 0)
+    errors.push('Add at least one assignment item.');
   draft.notices.forEach((notice, index) => {
     if (!notice.title.trim()) errors.push(`Notice ${index + 1} needs a title.`);
   });
-  draft.sections.forEach((section, sectionIndex) => {
-    if (!section.title.trim())
-      errors.push(`Area ${sectionIndex + 1} needs a title.`);
-    if (section.items.length === 0)
-      errors.push(`Area ${sectionIndex + 1} needs at least one item.`);
-    section.items.forEach((item, itemIndex) => {
-      const prefix = `Area ${sectionIndex + 1}, item ${itemIndex + 1}`;
-      if (!item.title.trim()) errors.push(`${prefix} needs a title.`);
-      if (
-        item.completionMode === 'practice_days' &&
-        (item.suggestedPracticeDays < 1 || item.suggestedPracticeDays > 7)
-      )
-        errors.push(`${prefix} practice target must be between 1 and 7 days.`);
-      item.resources.forEach((resource, resourceIndex) => {
-        if (!resource.displayName.trim())
+  draft.items.forEach((item, itemIndex) => {
+    const prefix = `Item ${itemIndex + 1}`;
+    if (!item.area.trim()) errors.push(`${prefix} needs an area.`);
+    if (!item.title.trim()) errors.push(`${prefix} needs a title.`);
+    if (
+      item.completionMode === 'practice_days' &&
+      (item.suggestedPracticeDays < 1 || item.suggestedPracticeDays > 7)
+    )
+      errors.push(`${prefix} practice target must be between 1 and 7 days.`);
+    item.resources.forEach((resource, resourceIndex) => {
+      if (!resource.displayName.trim())
+        errors.push(
+          `${prefix}, resource ${resourceIndex + 1} needs a display name.`,
+        );
+      if (resource.kind === 'upload') {
+        if (!resource.file && !resource.existingId)
+          errors.push(`${prefix}, resource ${resourceIndex + 1} needs a file.`);
+        else if (
+          resource.file &&
+          !ACCEPTED_UPLOAD_TYPES.includes(resource.file.type)
+        )
           errors.push(
-            `${prefix}, resource ${resourceIndex + 1} needs a display name.`,
+            `${resource.file.name} is not a supported PDF, MP3, or image.`,
           );
-        if (resource.kind === 'upload') {
-          if (!resource.file && !resource.existingId)
-            errors.push(
-              `${prefix}, resource ${resourceIndex + 1} needs a file.`,
-            );
-          else if (
-            resource.file &&
-            !ACCEPTED_UPLOAD_TYPES.includes(resource.file.type)
-          )
-            errors.push(
-              `${resource.file.name} is not a supported PDF, MP3, or image.`,
-            );
-          else if (resource.file && resource.file.size > MAX_UPLOAD_BYTES)
-            errors.push(`${resource.file.name} is larger than 15 MB.`);
-        } else if (!isHttpsUrl(resource.url))
-          errors.push(
-            `${prefix}, resource ${resourceIndex + 1} needs a valid HTTPS URL.`,
-          );
-        if (resource.kind === 'youtube' && !isYouTubeUrl(resource.url))
-          errors.push(
-            `${prefix}, resource ${resourceIndex + 1} must use YouTube.`,
-          );
-      });
+        else if (resource.file && resource.file.size > MAX_UPLOAD_BYTES)
+          errors.push(`${resource.file.name} is larger than 15 MB.`);
+      } else if (!isHttpsUrl(resource.url))
+        errors.push(
+          `${prefix}, resource ${resourceIndex + 1} needs a valid HTTPS URL.`,
+        );
+      if (resource.kind === 'youtube' && !isYouTubeUrl(resource.url))
+        errors.push(
+          `${prefix}, resource ${resourceIndex + 1} must use YouTube.`,
+        );
     });
   });
   return errors;
@@ -1081,8 +1049,8 @@ function toCreateRequest(draft: AssignmentDraft): CreateStudentAssignment {
       details: notice.details.trim() || undefined,
       position,
     })),
-    sections: draft.sections.map((section, position) => ({
-      title: section.title.trim(),
+    sections: groupDraftItems(draft.items).map((section, position) => ({
+      title: section.area,
       position,
       items: section.items.map((item, itemPosition) => ({
         title: item.title.trim(),
@@ -1115,6 +1083,7 @@ function toCreateRequest(draft: AssignmentDraft): CreateStudentAssignment {
 
 function toUpdateRequest(draft: AssignmentDraft): UpdateStudentAssignment {
   const request = toCreateRequest(draft);
+  const groupedItems = groupDraftItems(draft.items);
   return {
     title: request.title,
     description: draft.description.trim(),
@@ -1125,7 +1094,7 @@ function toUpdateRequest(draft: AssignmentDraft): UpdateStudentAssignment {
       ...section,
       items: section.items.map((item, itemIndex) => ({
         ...item,
-        retainedUploads: draft.sections[sectionIndex].items[
+        retainedUploads: groupedItems[sectionIndex].items[
           itemIndex
         ].resources.flatMap((resource, position) =>
           resource.kind === 'upload' && resource.existingId
@@ -1149,7 +1118,9 @@ async function uploadDraftFiles(
   dispatch: ReturnType<typeof useAppDispatch>,
   uploadedResourceIds: Set<string>,
 ) {
-  for (const [sectionPosition, section] of draft.sections.entries()) {
+  for (const [sectionPosition, section] of groupDraftItems(
+    draft.items,
+  ).entries()) {
     for (const [itemPosition, item] of section.items.entries()) {
       const savedItem = saved.sections
         .find((candidate) => candidate.position === sectionPosition)
