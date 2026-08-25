@@ -1,4 +1,5 @@
 import { config as loadEnv } from 'dotenv';
+import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { configSchema } from '../app-config/config.schema';
@@ -18,7 +19,7 @@ export default new DataSource({
   namingStrategy: new SnakeNamingStrategy(),
 
   synchronize: false,
-  entities: ['src/**/*.entity{.ts,.js}'],
-  migrations: ['src/database/migrations/*{.ts,.js}'],
+  entities: [join(__dirname, '..', '**', '*.entity{.ts,.js}')],
+  migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   migrationsTableName: 'migrations',
 });

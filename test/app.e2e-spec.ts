@@ -20,6 +20,13 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/health')
       .expect(200)
+      .expect({ status: 'ready', checks: { database: 'up' } });
+  });
+
+  it('/health/live (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/health/live')
+      .expect(200)
       .expect({ status: 'ok' });
   });
 

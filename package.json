@@ -22,9 +22,11 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "sh -c 'npm run typeorm -- migration:generate src/database/migrations/$1 -d src/database/data-source.ts --pretty' --",
     "migration:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
+    "migration:run:prod": "typeorm migration:run -d dist/database/data-source.js",
     "migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
     "migration:show": "npm run typeorm -- migration:show -d src/database/data-source.ts",
-    "migration:create": "sh -c 'npm run typeorm -- migration:create src/database/migrations/$1' --"
+    "migration:create": "sh -c 'npm run typeorm -- migration:create src/database/migrations/$1' --",
+    "smoke:deployment": "node scripts/deployment-smoke.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1110.0",
