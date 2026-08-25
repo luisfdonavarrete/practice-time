@@ -272,7 +272,9 @@ describe('authentication flow', () => {
     render(<App appStore={createAppStore()} />);
 
     expect(
-      await screen.findByRole('heading', { name: 'Mia’s practice week' }),
+      await screen.findByRole('heading', {
+        name: 'Ready to practice, Mia?',
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText('Year End Recital')).toBeInTheDocument();
     expect(screen.getByText('Amazing Grace')).toBeInTheDocument();
@@ -281,17 +283,13 @@ describe('authentication flow', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Written theory test')).toBeInTheDocument();
     expect(screen.getByText('1 of 2 goals complete (50%)')).toBeInTheDocument();
-    expect(screen.getByText('Total XP')).toBeInTheDocument();
-    expect(screen.getByText('Unlocked Aug 15, 2026')).toBeInTheDocument();
-    expect(await screen.findByText('Practice Spark')).toBeInTheDocument();
+    expect(screen.getByText('XP')).toBeInTheDocument();
     expect(screen.getByText('42')).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Continue practice' }),
+      screen.getByRole('link', { name: 'Start practice' }),
     ).toBeInTheDocument();
 
-    await userEvent.click(
-      screen.getByRole('link', { name: 'Continue practice' }),
-    );
+    await userEvent.click(screen.getByRole('link', { name: 'Start practice' }));
 
     expect(
       await screen.findByRole('heading', { name: 'Practice with Mia' }),
@@ -304,12 +302,18 @@ describe('authentication flow', () => {
       screen.getByRole('button', { name: 'Start timer' }),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('link', { name: 'Students' }));
+    await userEvent.click(screen.getByRole('link', { name: 'Rewards' }));
+    expect(
+      await screen.findByRole('heading', { name: 'Rewards' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Practice Spark')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('link', { name: 'Change' }));
     expect(
       await screen.findByRole('heading', { name: 'Who is practicing?' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'This week' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Practice' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Rewards' })).toBeInTheDocument();
   });
 
   it('clears authentication and returns to login on logout', async () => {

@@ -55,7 +55,15 @@ describe('student management', () => {
 
     render(<App appStore={createAppStore()} />);
 
-    await userEvent.type(await screen.findByLabelText('First name'), 'Mia');
+    expect(
+      await screen.findByRole('heading', { name: 'Add a student' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Who is practicing?' }),
+    ).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe('/students/new');
+
+    await userEvent.type(screen.getByLabelText('First name'), 'Mia');
     await userEvent.type(screen.getByLabelText('Last name'), 'Student');
     await userEvent.type(screen.getByLabelText('Date of birth'), '2014-01-02');
     await userEvent.selectOptions(

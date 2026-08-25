@@ -2,7 +2,6 @@ import { Link, useParams } from 'react-router-dom';
 import { useEffect, type ReactNode } from 'react';
 import { useAppDispatch } from '../app/hooks';
 import {
-  useGetAchievementsQuery,
   useGetAssignmentsQuery,
   useGetPracticeSummaryQuery,
 } from '../features/assignments/assignments.api';
@@ -43,9 +42,6 @@ export function DashboardPage() {
       skip: !currentAssignment,
     },
   );
-  const achievementsQuery = useGetAchievementsQuery(studentId, {
-    skip: !selectedStudent,
-  });
   const { achievement: unlockedAchievement, dismiss: dismissAchievement } =
     useAchievementSocket(studentId || null, currentAssignment?.id ?? null);
 
@@ -169,48 +165,62 @@ export function DashboardPage() {
   }
 
   const progress = progressQuery.data;
-  const achievements = achievementsQuery.data ?? [];
-
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
       <header className="dashboard-heading">
         <div>
-          <p className="eyebrow">{formatWeek(currentAssignment)}</p>
+          <p className="eyebrow">Today · {formatWeek(currentAssignment)}</p>
           <h1 id="dashboard-title">
-            {selectedStudent.firstName}’s practice week
+            Ready to practice, {selectedStudent.firstName}?
           </h1>
-          <p>{currentAssignment.title}</p>
+          <p>Pick up where you left off or review this week’s goals.</p>
         </div>
-        <div className="button-row dashboard-actions">
+      </header>
+
+      <section
+        className="today-assignment"
+        aria-labelledby="current-assignment-title"
+      >
+        <div>
+          <p className="eyebrow">Current assignment</p>
+          <h2 id="current-assignment-title">{currentAssignment.title}</h2>
+          <p>
+            {progress
+              ? `${progress.items.filter((item) => item.completed).length} of ${progress.items.length} goals complete`
+              : 'Loading this week’s progress…'}
+          </p>
+        </div>
+        <div className="today-assignment-actions">
           {currentAssignment.status === 'draft' ? (
             <Link
               className="primary-link"
               to={`/students/${studentId}/assignments/${currentAssignment.id}/edit`}
             >
-              Edit draft
+              Finish assignment
             </Link>
           ) : (
             <Link
               className="primary-link"
               to={`/students/${studentId}/practice?assignment=${currentAssignment.id}`}
             >
-              Continue practice
+              Start practice
             </Link>
           )}
-          <Link
-            className="secondary-link"
-            to={`/students/${studentId}/assignments/${currentAssignment.id}/duplicate`}
-          >
-            Duplicate week
-          </Link>
-          <Link
-            className="text-link"
-            to={`/students/${studentId}/assignments/new`}
-          >
-            New assignment
-          </Link>
+          <details className="assignment-menu">
+            <summary>More</summary>
+            <div>
+              <Link
+                to={`/students/${studentId}/assignments/${currentAssignment.id}/duplicate`}
+              >
+                Duplicate week
+              </Link>
+              <Link to={`/students/${studentId}/assignments/new`}>
+                New assignment
+              </Link>
+            </div>
+          </details>
         </div>
-      </header>
+      </section>
 
       {currentAssignment.notices.length > 0 && (
         <section className="notice-strip" aria-labelledby="notices-title">
@@ -227,8 +237,11 @@ export function DashboardPage() {
         </section>
       )}
 
-      <section className="metric-grid" aria-label="Weekly progress overview">
-        <Metric label="Total XP" value={progress ? String(progress.xp) : '—'} />
+      <section
+        className="metric-grid today-metrics"
+        aria-label="Weekly progress overview"
+      >
+        <Metric label="XP" value={progress ? String(progress.xp) : '—'} />
         <Metric
           label="Current streak"
           value={progress ? `${progress.currentStreak} days` : '—'}
@@ -240,16 +253,6 @@ export function DashboardPage() {
         <Metric
           label="Weekly minutes"
           value={progress ? String(progress.weeklyMinutes) : '—'}
-        />
-        <Metric
-          label="Assignment"
-          value={
-            progress
-              ? progress.assignmentCompleted
-                ? 'Complete'
-                : 'In progress'
-              : '—'
-          }
         />
       </section>
 
@@ -268,7 +271,7 @@ export function DashboardPage() {
         <InlineStatus>Calculating this week’s progress…</InlineStatus>
       ) : null}
 
-      <div className="dashboard-columns">
+      <div className="today-content">
         <section className="assignment-card" aria-labelledby="items-title">
           <div className="section-heading">
             <div>
@@ -304,34 +307,6 @@ export function DashboardPage() {
             </div>
           ))}
         </section>
-
-        <aside className="reward-card" aria-labelledby="rewards-title">
-          <p className="eyebrow">Achievements</p>
-          <h2 id="rewards-title">Progress worth celebrating</h2>
-          {achievementsQuery.isLoading && <p>Loading achievements…</p>}
-          {achievementsQuery.isError && (
-            <p>Achievements will return when the connection recovers.</p>
-          )}
-          {!achievementsQuery.isLoading && achievements.length === 0 && (
-            <p>Complete the first practice session to unlock a badge.</p>
-          )}
-          <ul className="achievement-list">
-            {[...achievements]
-              .sort((a, b) => b.unlockedAt.localeCompare(a.unlockedAt))
-              .map((achievement) => (
-                <li key={achievement.id}>
-                  <span aria-hidden="true">★</span>
-                  <div>
-                    <strong>{achievement.title}</strong>
-                    <p>{achievement.description}</p>
-                    <time dateTime={achievement.unlockedAt}>
-                      Unlocked {formatAchievementDate(achievement.unlockedAt)}
-                    </time>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </aside>
       </div>
 
       {unlockedAchievement && (
@@ -542,12 +517,4 @@ function formatNotice(
   return (
     [date, location].filter(Boolean).join(' · ') || 'Details in the assignment'
   );
-}
-
-function formatAchievementDate(value: string): string {
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(value));
 }

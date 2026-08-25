@@ -10,6 +10,8 @@ import type { AppStore } from './store';
 import { AssignmentAuthoringPage } from '../pages/AssignmentAuthoringPage';
 import { PracticePlayerPage } from '../pages/PracticePlayerPage';
 import { StudentsPage } from '../pages/StudentsPage';
+import { RewardsPage } from '../pages/RewardsPage';
+import { AddStudentPage } from '../pages/AddStudentPage';
 import { useAppSelector } from './hooks';
 import { useGetStudentsQuery } from '../features/students/students.api';
 
@@ -44,14 +46,15 @@ export function App({ appStore = store }: AppProps) {
               <Route element={<AppShell />}>
                 <Route index element={<StudentLanding />} />
                 <Route path="students" element={<StudentsPage />} />
-                <Route
-                  path="students/new"
-                  element={<StudentsPage initialCreate />}
-                />
+                <Route path="students/new" element={<AddStudentPage />} />
                 <Route path="students/:studentId" element={<DashboardPage />} />
                 <Route
                   path="students/:studentId/practice"
                   element={<PracticePlayerPage />}
+                />
+                <Route
+                  path="students/:studentId/rewards"
+                  element={<RewardsPage />}
                 />
                 <Route
                   path="students/:studentId/assignments/new"

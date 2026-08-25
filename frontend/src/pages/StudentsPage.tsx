@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { StudentForm } from '../components/StudentForm';
+import { createEmptyStudentForm } from '../components/student-form.defaults';
 import { isFetchBaseQueryError } from '../features/auth/is-fetch-base-query-error';
 import {
   studentSelected,
   studentSelectionCleared,
 } from '../features/students/student-context.slice';
 import {
-  useCreateStudentMutation,
   useDeactivateStudentMutation,
   useGetStudentsQuery,
   useUpdateStudentMutation,
@@ -17,56 +18,19 @@ import type {
   Student,
 } from '../features/students/students.types';
 
-const EMPTY_FORM: SaveStudentRequest = {
-  firstName: '',
-  lastName: '',
-  dateOfBirth: '',
-  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-};
-
-const FALLBACK_TIME_ZONES = [
-  'UTC',
-  'America/Toronto',
-  'America/Vancouver',
-  'America/Edmonton',
-  'America/Winnipeg',
-  'America/Halifax',
-  'America/St_Johns',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'Europe/London',
-] as const;
-
-export function StudentsPage({
-  initialCreate = false,
-}: {
-  initialCreate?: boolean;
-}) {
-  const navigate = useNavigate();
+export function StudentsPage() {
   const dispatch = useAppDispatch();
   const selectedStudentId = useAppSelector(
     (state) => state.studentContext.selectedStudentId,
   );
   const studentsQuery = useGetStudentsQuery();
-  const [createStudent, createState] = useCreateStudentMutation();
   const [updateStudent, updateState] = useUpdateStudentMutation();
   const [deactivateStudent, deactivateState] = useDeactivateStudentMutation();
-  const [editingId, setEditingId] = useState<string | 'new' | null>(
-    initialCreate ? 'new' : null,
-  );
-  const [form, setForm] = useState<SaveStudentRequest>(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<SaveStudentRequest>(createEmptyStudentForm);
   const [formError, setFormError] = useState<string | null>(null);
   const students = studentsQuery.data?.data ?? [];
-  const busy =
-    createState.isLoading || updateState.isLoading || deactivateState.isLoading;
-
-  function beginCreate() {
-    setEditingId('new');
-    setForm(EMPTY_FORM);
-    setFormError(null);
-  }
+  const busy = updateState.isLoading || deactivateState.isLoading;
 
   function beginEdit(student: Student) {
     setEditingId(student.id);
@@ -82,7 +46,6 @@ export function StudentsPage({
   function closeForm() {
     setEditingId(null);
     setFormError(null);
-    if (initialCreate) navigate('/students', { replace: true });
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -100,18 +63,11 @@ export function StudentsPage({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
       };
-      const saved =
-        editingId === 'new'
-          ? await createStudent(request).unwrap()
-          : await updateStudent({
-              studentId: editingId!,
-              student: request,
-            }).unwrap();
+      await updateStudent({
+        studentId: editingId!,
+        student: request,
+      }).unwrap();
       setEditingId(null);
-      if (editingId === 'new') {
-        dispatch(studentSelected(saved.id));
-        navigate(`/students/${saved.id}`, { replace: true });
-      }
     } catch (error) {
       setFormError(studentErrorMessage(error));
     }
@@ -144,13 +100,9 @@ export function StudentsPage({
           </p>
         </div>
         {!editingId && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={beginCreate}
-          >
+          <Link className="primary-link" to="/students/new">
             Add student
-          </button>
+          </Link>
         )}
       </header>
 
@@ -163,11 +115,11 @@ export function StudentsPage({
       {editingId && (
         <StudentForm
           form={form}
-          isNew={editingId === 'new'}
+          submitLabel="Save changes"
           busy={busy}
           onChange={setForm}
           onCancel={closeForm}
-          onSubmit={save}
+          onSubmit={(event) => void save(event)}
         />
       )}
 
@@ -186,13 +138,9 @@ export function StudentsPage({
             <h2>Add the student you practice with.</h2>
             <p>Create a student profile before building a weekly assignment.</p>
             {!editingId && (
-              <button
-                type="button"
-                className="primary-button"
-                onClick={beginCreate}
-              >
+              <Link className="primary-link" to="/students/new">
                 Add your first student
-              </button>
+              </Link>
             )}
           </div>
         )}
@@ -247,103 +195,6 @@ export function StudentsPage({
       )}
     </section>
   );
-}
-
-function StudentForm({
-  form,
-  isNew,
-  busy,
-  onChange,
-  onCancel,
-  onSubmit,
-}: {
-  form: SaveStudentRequest;
-  isNew: boolean;
-  busy: boolean;
-  onChange: (form: SaveStudentRequest) => void;
-  onCancel: () => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  return (
-    <form className="student-form form-card" onSubmit={onSubmit}>
-      <h2>{isNew ? 'Add student' : 'Edit student'}</h2>
-      <div className="form-grid">
-        <label>
-          First name
-          <input
-            value={form.firstName}
-            maxLength={255}
-            autoComplete="off"
-            onChange={(event) =>
-              onChange({ ...form, firstName: event.target.value })
-            }
-          />
-        </label>
-        <label>
-          Last name
-          <input
-            value={form.lastName}
-            maxLength={255}
-            autoComplete="off"
-            onChange={(event) =>
-              onChange({ ...form, lastName: event.target.value })
-            }
-          />
-        </label>
-        <label>
-          Date of birth
-          <input
-            type="date"
-            value={form.dateOfBirth}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(event) =>
-              onChange({ ...form, dateOfBirth: event.target.value })
-            }
-          />
-        </label>
-        <label>
-          Time zone
-          <select
-            value={form.timeZone}
-            onChange={(event) =>
-              onChange({ ...form, timeZone: event.target.value })
-            }
-          >
-            {timeZoneOptions(form.timeZone).map((timeZone) => (
-              <option key={timeZone} value={timeZone}>
-                {timeZone}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <p className="field-help">
-        Practice dates are calculated in this time zone. Choose the student’s
-        actual location, not the server location.
-      </p>
-      <div className="student-form-actions">
-        <button
-          type="button"
-          className="secondary-button"
-          disabled={busy}
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
-        <button type="submit" className="primary-button" disabled={busy}>
-          {busy ? 'Saving…' : isNew ? 'Add student' : 'Save changes'}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function timeZoneOptions(current: string): string[] {
-  const supported =
-    typeof Intl.supportedValuesOf === 'function'
-      ? Intl.supportedValuesOf('timeZone')
-      : [...FALLBACK_TIME_ZONES];
-  return supported.includes(current) ? supported : [current, ...supported];
 }
 
 function formatStudentDate(value: string): string {

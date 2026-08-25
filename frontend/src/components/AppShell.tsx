@@ -15,14 +15,13 @@ export function AppShell() {
   const activeStudentId = studentId ?? rememberedStudentId ?? undefined;
   const student = students.data?.data.find(({ id }) => id === activeStudentId);
   const navigation = student
-    ? [
+      ? [
         { to: `/students/${student.id}`, label: 'This week', end: true },
         {
-          to: `/students/${student.id}/practice`,
-          label: 'Practice',
+          to: `/students/${student.id}/rewards`,
+          label: 'Rewards',
           end: false,
         },
-        { to: '/students', label: 'Students', end: true },
       ]
     : [{ to: '/students', label: 'Students', end: true }];
 
