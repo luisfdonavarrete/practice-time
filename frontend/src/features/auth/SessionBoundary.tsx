@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { authStorage } from './auth-storage';
 import { loggedOut, sessionRestored } from './auth.slice';
 import { useGetCurrentUserQuery } from './auth.api';
+import { MetronomeMark } from '../../components/MetronomeMark';
 
 interface SessionBoundaryProps {
   children: ReactNode;
@@ -31,9 +32,7 @@ export function SessionBoundary({ children }: SessionBoundaryProps) {
   if (accessToken && (isLoading || (!isError && !currentUser))) {
     return (
       <main className="session-loading" aria-live="polite">
-        <span className="loading-note" aria-hidden="true">
-          ♪
-        </span>
+        <MetronomeMark className="loading-note" />
         <p>Restoring your practice session…</p>
       </main>
     );

@@ -45,25 +45,9 @@ export function LoginPage() {
 
   return (
     <main className="login-page">
-      <section className="login-introduction" aria-labelledby="login-heading">
-        <div className="login-brand">
-          <span className="brand-mark" aria-hidden="true">
-            ♪
-          </span>
-          Practice Time
-        </div>
-        <p className="eyebrow">Welcome back</p>
-        <h1 id="login-heading">Keep their momentum moving.</h1>
-        <p>
-          Sign in to open this week’s assignments, practice resources, and
-          progress.
-        </p>
-      </section>
-
       <section className="login-panel" aria-label="Sign in form">
         <form onSubmit={(event) => void submit(event)} noValidate>
           <h2>Sign in</h2>
-          <p className="form-help">Use the email connected to your account.</p>
 
           {serverError && (
             <div className="form-alert" role="alert">

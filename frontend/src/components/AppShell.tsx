@@ -3,6 +3,7 @@ import { useAppSelector } from '../app/hooks';
 import { useLogout } from '../features/auth/use-logout';
 import { UploadStatus } from './UploadStatus';
 import { useGetStudentsQuery } from '../features/students/students.api';
+import { MetronomeMark } from './MetronomeMark';
 
 export function AppShell() {
   const currentUser = useAppSelector((state) => state.auth.currentUser);
@@ -33,9 +34,7 @@ export function AppShell() {
           to={student ? `/students/${student.id}` : '/students'}
           aria-label="Practice Time home"
         >
-          <span className="brand-mark" aria-hidden="true">
-            ♪
-          </span>
+          <MetronomeMark className="brand-mark" />
           <span>Practice Time</span>
         </NavLink>
         {student && (
