@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { LoginDto } from './dto/login.dto';
@@ -9,6 +9,7 @@ import { CurrentUser } from './decorators/authenticated-user.decorator';
 import { AuthenticatedUser } from './models/authenticated-user';
 import { Public } from './decorators/public.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('authentication')
 @Controller('auth')
@@ -25,6 +26,14 @@ export class AuthController {
       await this.authService.signUp(signUpDto),
     );
   }
+  @UseGuards(ThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: 5,
+      ttl: 60_000,
+      blockDuration: 5 * 60_000,
+    },
+  })
   @Public()
   @Post('/login')
   async signIn(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {

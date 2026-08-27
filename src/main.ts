@@ -10,6 +10,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import type { INestApplicationContext } from '@nestjs/common';
 import { Server, type ServerOptions } from 'socket.io';
 import { configureOpenApi } from './common/api/open-api';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 class FrontendIoAdapter extends IoAdapter {
   constructor(
@@ -33,7 +34,7 @@ class FrontendIoAdapter extends IoAdapter {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(AppConfigService);
 
   app.enableCors({
@@ -69,6 +70,7 @@ async function bootstrap() {
 
   configureOpenApi(app, configService.nodeEnv);
 
+  app.set('trust proxy', 1);
   await app.listen(configService.port);
 }
 void bootstrap();

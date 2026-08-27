@@ -9,12 +9,21 @@ import { AppConfigService } from '../app-config/app.config.service';
 import { JwtStrategy } from './jwt.strategy';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
     HashingModule,
     UsersModule,
     AppConfigModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
     JwtModule.registerAsync({
       global: true,
       imports: [AppConfigModule],
