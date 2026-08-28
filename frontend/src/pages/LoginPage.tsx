@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useLoginMutation } from '../features/auth/auth.api';
 import { authStorage } from '../features/auth/auth-storage';
 import { tokenReceived } from '../features/auth/auth.slice';
+import { MetronomeMark } from '../components/MetronomeMark';
 
 interface LoginErrors {
   email?: string;
@@ -47,6 +48,7 @@ export function LoginPage() {
     <main className="login-page">
       <section className="login-panel" aria-label="Sign in form">
         <form onSubmit={(event) => void submit(event)} noValidate>
+          <MetronomeMark className="login-mark" />
           <h2>Sign in</h2>
 
           {serverError && (

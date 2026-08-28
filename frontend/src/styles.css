@@ -1606,6 +1606,15 @@ h1 {
   width: 100%;
 }
 
+.login-mark {
+  display: block;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0 auto 0.75rem;
+  color: var(--color-primary);
+  opacity: 0.72;
+}
+
 .login-panel h2 {
   margin: 0 0 2rem;
   color: var(--color-text-strong);
