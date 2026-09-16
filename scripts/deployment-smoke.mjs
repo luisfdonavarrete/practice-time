@@ -221,6 +221,9 @@ async function connectAchievements(accessToken, createdStudentId) {
   const connection = io(new URL('/achievements', apiUrl).toString(), {
     transports: ['websocket'],
     auth: { token: accessToken },
+    reconnectionAttempts: 3,
+    reconnectionDelay: 5000,
+    reconnectionDelayMax: 15000,
     timeout: 10_000,
   });
   await once(connection, 'connect', 15_000);

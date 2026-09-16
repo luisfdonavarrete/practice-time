@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { authStorage } from '../features/auth/auth-storage';
@@ -126,148 +126,146 @@ describe('authentication flow', () => {
       'practice-time.selected-student',
       '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
     );
-    vi.stubGlobal(
-      'fetch',
-      vi.fn<typeof fetch>().mockImplementation((input) => {
-        const request = input as Request;
-        const path = new URL(request.url).pathname;
-        if (path === '/auth/me') {
-          return jsonResponse({
-            success: true,
-            data: {
-              id: '0a96c40e-e677-4f1f-87dd-47cd202214e8',
-              email: 'owner@example.com',
-              firstName: 'Luis',
-              lastName: 'Owner',
-            },
-          });
-        }
-        if (path === '/students') {
-          return jsonResponse({
-            success: true,
-            data: [
-              {
-                id: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
-                firstName: 'Mia',
-                lastName: 'Student',
-                dateOfBirth: '2014-01-01',
-                timeZone: 'America/Toronto',
-              },
-            ],
-            meta: {
-              itemsPerPage: 100,
-              totalItems: 1,
-              currentPage: 1,
-              totalPages: 1,
-            },
-          });
-        }
-        if (path === '/student-assignments') {
-          return jsonResponse({
-            success: true,
-            data: [
-              {
-                id: '70b93a9f-6d5a-4e9e-9c3d-31847238fb86',
-                studentId: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
-                title: 'Recital preparation',
-                startDate: '2000-01-01',
-                endDate: '2099-12-31',
-                status: 'published',
-                notices: [
-                  {
-                    id: 'aad37864-ce10-43a8-ae71-01edade39403',
-                    title: 'Year End Recital',
-                    occursAt: '2026-06-22T22:45:00.000Z',
-                    location: 'Room 213',
-                    details: 'Arrive ten minutes early.',
-                    position: 0,
-                  },
-                ],
-                sections: [
-                  {
-                    id: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
-                    title: 'Repertoire',
-                    position: 0,
-                    items: [
-                      {
-                        id: 'e0fc7744-41fc-4638-bb3b-fac25c4d85ad',
-                        title: 'Amazing Grace',
-                        instructions: 'The whole song, memorized.',
-                        completionMode: 'practice_days',
-                        suggestedPracticeDays: 5,
-                        dueAt: null,
-                        position: 0,
-                        resources: [],
-                      },
-                      {
-                        id: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
-                        title: 'Written theory test',
-                        instructions: 'Complete the online test.',
-                        completionMode: 'one_time',
-                        suggestedPracticeDays: null,
-                        dueAt: '2099-12-30T12:00:00.000Z',
-                        position: 1,
-                        resources: [],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          });
-        }
-        if (path.endsWith('/practice-summary')) {
-          return jsonResponse({
-            success: true,
-            data: {
-              assignmentId: '70b93a9f-6d5a-4e9e-9c3d-31847238fb86',
-              studentId: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
-              startDate: '2000-01-01',
-              endDate: '2099-12-31',
-              weeklyMinutes: 42,
-              distinctPracticeDays: 3,
-              currentStreak: 3,
-              xp: 30,
-              assignmentCompleted: false,
-              items: [
-                {
-                  itemId: 'e0fc7744-41fc-4638-bb3b-fac25c4d85ad',
-                  sectionId: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
-                  sectionTitle: 'Repertoire',
-                  title: 'Amazing Grace',
-                  mode: 'practice_days',
-                  target: 5,
-                  current: 3,
-                  completed: false,
-                },
-                {
-                  itemId: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
-                  sectionId: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
-                  sectionTitle: 'Repertoire',
-                  title: 'Written theory test',
-                  mode: 'one_time',
-                  target: 1,
-                  current: 1,
-                  completed: true,
-                },
-              ],
-            },
-          });
-        }
+    const practiceFetch = vi.fn<typeof fetch>().mockImplementation((input) => {
+      const request = input as Request;
+      const path = new URL(request.url).pathname;
+      if (path === '/auth/me') {
+        return jsonResponse({
+          success: true,
+          data: {
+            id: '0a96c40e-e677-4f1f-87dd-47cd202214e8',
+            email: 'owner@example.com',
+            firstName: 'Luis',
+            lastName: 'Owner',
+          },
+        });
+      }
+      if (path === '/students') {
         return jsonResponse({
           success: true,
           data: [
             {
-              id: 'f89ccaa6-dd95-4dbb-b7ab-311809ae39c2',
-              key: 'three_day_streak',
-              title: 'Practice Spark',
-              description: 'Build a three-day practice streak.',
-              unlockedAt: '2026-08-15T12:00:00.000Z',
+              id: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
+              firstName: 'Mia',
+              lastName: 'Student',
+              dateOfBirth: '2014-01-01',
+              timeZone: 'America/Toronto',
+            },
+          ],
+          meta: {
+            itemsPerPage: 100,
+            totalItems: 1,
+            currentPage: 1,
+            totalPages: 1,
+          },
+        });
+      }
+      if (path === '/student-assignments') {
+        return jsonResponse({
+          success: true,
+          data: [
+            {
+              id: '70b93a9f-6d5a-4e9e-9c3d-31847238fb86',
+              studentId: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
+              title: 'Recital preparation',
+              startDate: '2000-01-01',
+              endDate: '2099-12-31',
+              status: 'published',
+              notices: [
+                {
+                  id: 'aad37864-ce10-43a8-ae71-01edade39403',
+                  title: 'Year End Recital',
+                  occursAt: '2026-06-22T22:45:00.000Z',
+                  location: 'Room 213',
+                  details: 'Arrive ten minutes early.',
+                  position: 0,
+                },
+              ],
+              sections: [
+                {
+                  id: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
+                  title: 'Repertoire',
+                  position: 0,
+                  items: [
+                    {
+                      id: 'e0fc7744-41fc-4638-bb3b-fac25c4d85ad',
+                      title: 'Amazing Grace',
+                      instructions: 'The whole song, memorized.',
+                      completionMode: 'practice_days',
+                      suggestedPracticeDays: 5,
+                      dueAt: null,
+                      position: 0,
+                      resources: [],
+                    },
+                    {
+                      id: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
+                      title: 'Written theory test',
+                      instructions: 'Complete the online test.',
+                      completionMode: 'one_time',
+                      suggestedPracticeDays: null,
+                      dueAt: '2099-12-30T12:00:00.000Z',
+                      position: 1,
+                      resources: [],
+                    },
+                  ],
+                },
+              ],
             },
           ],
         });
-      }),
-    );
+      }
+      if (path.endsWith('/practice-summary')) {
+        return jsonResponse({
+          success: true,
+          data: {
+            assignmentId: '70b93a9f-6d5a-4e9e-9c3d-31847238fb86',
+            studentId: '3bd10a90-bca1-4e1e-87f2-f98b01322ee0',
+            startDate: '2000-01-01',
+            endDate: '2099-12-31',
+            weeklyMinutes: 42,
+            distinctPracticeDays: 3,
+            currentStreak: 3,
+            xp: 30,
+            assignmentCompleted: false,
+            items: [
+              {
+                itemId: 'e0fc7744-41fc-4638-bb3b-fac25c4d85ad',
+                sectionId: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
+                sectionTitle: 'Repertoire',
+                title: 'Amazing Grace',
+                mode: 'practice_days',
+                target: 5,
+                current: 3,
+                completed: false,
+              },
+              {
+                itemId: '986076a5-b4bb-41cf-8aec-f3d655e8ef19',
+                sectionId: 'af0a8530-9b21-4621-8567-7cf2d263b1b0',
+                sectionTitle: 'Repertoire',
+                title: 'Written theory test',
+                mode: 'one_time',
+                target: 1,
+                current: 1,
+                completed: true,
+              },
+            ],
+          },
+        });
+      }
+      return jsonResponse({
+        success: true,
+        data: [
+          {
+            id: 'f89ccaa6-dd95-4dbb-b7ab-311809ae39c2',
+            key: 'three_day_streak',
+            title: 'Practice Spark',
+            description: 'Build a three-day practice streak.',
+            unlockedAt: '2026-08-15T12:00:00.000Z',
+          },
+        ],
+      });
+    });
+    vi.stubGlobal('fetch', practiceFetch);
 
     render(<App appStore={createAppStore()} />);
 
@@ -301,6 +299,22 @@ describe('authentication flow', () => {
     expect(
       screen.getByRole('button', { name: 'Start timer' }),
     ).toBeInTheDocument();
+
+    const intervalSpy = vi.spyOn(window, 'setInterval');
+    const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
+    const requestsBeforeTimer = practiceFetch.mock.calls.length;
+    await userEvent.click(screen.getByRole('button', { name: 'Start timer' }));
+    const tick = intervalSpy.mock.calls[0][0] as () => void;
+    const intervalId = intervalSpy.mock.results[0].value as number;
+    act(() => {
+      for (let second = 0; second < 60; second++) tick();
+    });
+    expect(screen.getByText('01:00')).toBeInTheDocument();
+    expect(practiceFetch).toHaveBeenCalledTimes(requestsBeforeTimer);
+    await userEvent.click(screen.getByRole('button', { name: 'Pause' }));
+    expect(clearIntervalSpy).toHaveBeenCalledWith(intervalId);
+    intervalSpy.mockRestore();
+    clearIntervalSpy.mockRestore();
 
     await userEvent.click(screen.getByRole('link', { name: 'Rewards' }));
     expect(

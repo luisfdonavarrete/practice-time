@@ -29,6 +29,10 @@ export function useAchievementSocket(
     const socket = io(`${environment.apiBaseUrl}/achievements`, {
       transports: ['websocket'],
       auth: { token },
+      reconnectionAttempts: 3,
+      reconnectionDelay: 5000,
+      reconnectionDelayMax: 15000,
+      timeout: 10000,
     });
 
     const reconcile = () => {
