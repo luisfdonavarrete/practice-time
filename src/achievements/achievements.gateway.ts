@@ -31,7 +31,12 @@ type AchievementSocket = Socket<
 >;
 
 @Injectable()
-@WebSocketGateway({ namespace: 'achievements', transports: ['websocket'] })
+@WebSocketGateway({
+  namespace: 'achievements',
+  transports: ['websocket'],
+  pingInterval: 10000,
+  pingTimeout: 5000,
+})
 export class AchievementsGateway implements OnGatewayInit, OnModuleDestroy {
   @WebSocketServer()
   private server: Namespace;
